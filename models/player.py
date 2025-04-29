@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
 from typing import Dict, List
-from .courier import Courier
-from .wagon import Wagon
-from .goods_item import GoodsItem
+from models.courier import Courier
+from models.wagon import Wagon
+from models.goods_item import GoodsItem
+from models.caravan import Caravan
 
 @dataclass
 class Player:
@@ -10,33 +11,35 @@ class Player:
     Состояние игрока.
 
     Атрибуты:
-        balance (int): Денежный баланс.
-        inventory (Dict[str, int]): Склад товаров.
-        couriers (List[Courier]): Курьеры.
-        wagons (List[Wagon]): Повозки.
+        balance (int): Баланс в денариях.
+        inventory (Dict[str, int]): Товары на складе (название → количество).
+        couriers (List[Courier]): Курьеры, доступные игроку.
+        wagons (List[Wagon]): Повозки, доступные игроку.
+        completed_caravans (List[Caravan]): История завершённых миссий.
     """
-    balance: intSW
+    balance: int
     inventory: Dict[str, int] = field(default_factory=dict)
     couriers: List[Courier] = field(default_factory=list)
     wagons: List[Wagon] = field(default_factory=list)
+    completed_caravans: List[Caravan] = field(default_factory=list)
 
     def add_goods(self, item: GoodsItem, quantity: int) -> None:
         """
-        Добавить товар.
+        Добавляет товар на склад.
 
         Args:
             item (GoodsItem): Товар.
-            quantity (int): Кол-во.
+            quantity (int): Количество.
         """
         self.inventory[item.name] = self.inventory.get(item.name, 0) + quantity
 
     def remove_goods(self, item: GoodsItem, quantity: int) -> bool:
         """
-        Удалить товар.
+        Удаляет товар со склада, если достаточно.
 
         Args:
             item (GoodsItem): Товар.
-            quantity (int): Кол-во.
+            quantity (int): Количество.
 
         Returns:
             bool: Удалено успешно или нет.
@@ -50,20 +53,20 @@ class Player:
 
     def has_goods(self, item: GoodsItem, quantity: int) -> bool:
         """
-        Есть ли товар в нужном кол-ве?
+        Проверяет наличие товара.
 
         Args:
             item (GoodsItem): Товар.
-            quantity (int): Кол-во.
+            quantity (int): Требуемое количество.
 
         Returns:
-            bool: Да или нет.
+            bool: Есть ли достаточно.
         """
         return self.inventory.get(item.name, 0) >= quantity
 
     def adjust_balance(self, amount: int) -> None:
         """
-        Изменить баланс.
+        Изменяет баланс игрока.
 
         Args:
             amount (int): Сумма (может быть отрицательной).
