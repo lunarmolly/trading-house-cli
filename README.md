@@ -1,3 +1,4 @@
+```bash
 trading_house_cli/
 ├── main.py                      # Точка входа
 │
@@ -29,3 +30,4 @@ trading_house_cli/
 │
 ├── requirements.txt              # Зависимости
 └── README.md                     # Документация
+```
