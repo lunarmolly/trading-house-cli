@@ -126,11 +126,14 @@ class Game:
                 print("Караван завершён:")
                 print("  Событие в пути:", report["event_path"])
                 print("  Событие в городе:", report["event_city"])
-                print("  Прибыль:", report["profit"])
-                print("  Расходы:", report["expenses"])
-                print("  Чистый доход:", report["net"])
-                self.player.completed_caravans.append(caravan)
-                finished.append(caravan)
+                for name, data in report["sale_breakdown"].items():
+                    print(f"  - {name}:")
+                    print(f"     {data['qty']} ед. × {data['unit_price']} (баз. {data['base_price']})")
+                    print(f"     Модификаторы: город {data['city_mod']:+.2f}, ивент {data['event_mod']:+.2f}, дальность {data['dist_mod']:+.2f}")
+                    print(f"     Итоговый множитель: {data['final_mod']:.2f}")
+                print(f"  Прибыль: {report['profit']}")
+                print(f"  Расходы: {report['expenses']}")
+                print(f"  Чистый доход: {report['net']}")
 
         for c in finished:
             self.active_caravans.remove(c)

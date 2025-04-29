@@ -75,7 +75,7 @@ def process_completed_caravan(
             caravan.goods[name] -= lost
 
     # === Продажа товаров ===
-    profit = calculate_sale_profit(
+    profit, breakdown = calculate_sale_profit(
         caravan=caravan,
         goods=goods_dict,
         config=config
@@ -95,6 +95,7 @@ def process_completed_caravan(
         profit=profit,
         expenses=total_expense,
         event_path=event,
-        event_city=caravan.destination.current_event or "Нет события"
+        event_city=caravan.destination.current_event or "Нет события",
+        sale_breakdown=breakdown
     )
     return report, True

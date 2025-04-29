@@ -28,7 +28,6 @@ def show_main_menu(game) -> None:
             buy_goods(game)
         elif choice == "5":
             show_inventory(game)
-            input("\nНажмите Enter для возврата в меню...")
         elif choice == "6":
             game.next_cycle()
             game.update_caravans()
@@ -166,10 +165,15 @@ def send_caravan(game) -> None:
     print("\n--- Товары на складе ---")
     for idx, (name, qty) in enumerate(available_goods, 1):
         good_obj = goods_dict[name]
-        event_modifiers = game.config["event_modifiers"]
+        # Расчёт итогового модификатора (складывание процентов!)
+        city_mod = city.demand_modifiers.get(name, 1.0) - 1.0
         event = city.current_event or "Нет события"
-        modifier = event_modifiers.get(event, {}).get(name, 1.0)
-        expected_price = int(good_obj.base_price * modifier)
+        event_mod = game.config["event_modifiers"].get(event, {}).get(name, 1.0) - 1.0
+        distance_mod = city.distance * 0.02
+        total_percent = city_mod + event_mod + distance_mod
+        final_modifier = 1.0 + total_percent
+        expected_price = int(good_obj.base_price * final_modifier)
+
         print(f"{idx}. {name} — {qty} ед. — ожидаемая цена продажи: {expected_price} денариев за ед.")
 
     selection = {}
