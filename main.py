@@ -1,45 +1,40 @@
+import argparse
+
 from core.world import load_balance_config, generate_world
 from core.goods import load_goods
 from models.player import Player
 from models.courier import Courier
 from models.wagon import Wagon
-from ui.cli import show_main_menu
 from core.game import Game
+from ui.gui import TradeHouseGUI
+
 
 def main():
-    print("=== Добро пожаловать в Торговый Дом! ===")
+    print("=== ДОБРО ПОЖАЛОВАТЬ В ТОРГОВЫЙ ДОМ! ===")
 
-    # Загрузка конфигурации
     config = load_balance_config()
-
-    # Генерация мира и товаров
+    #Генерация мира и товаров
     cities = generate_world(config)
     goods = load_goods(config)
 
-    # Создание игрока
+    #Создание игрока
     player = Player(
         balance=config["player"]["starting_balance"],
         couriers=[
-            Courier(
-                name=courier_data["name"],
-                endurance=courier_data["endurance"],
-                illness_resistance=courier_data["illness_resistance"]
-            ) for courier_data in config["player"]["starting_couriers"]
+            Courier(**courier_data) for courier_data in config["player"]["starting_couriers"]
         ],
         wagons=[
-            Wagon(
-                name=wagon_data["name"],
-                capacity=wagon_data["capacity"],
-                durability=wagon_data["durability"]
-            ) for wagon_data in config["player"]["starting_wagons"]
+            Wagon(**wagon_data) for wagon_data in config["player"]["starting_wagons"]
         ]
     )
 
-    # Создание игры
+    #Инициализация игры
     game = Game(player=player, cities=cities, goods=goods, config=config)
 
-    # Запуск CLI-интерфейса
-    show_main_menu(game)
+    #Запуск GUI
+    app = TradeHouseGUI(game)
+    app.mainloop()
+
 
 if __name__ == "__main__":
     main()
