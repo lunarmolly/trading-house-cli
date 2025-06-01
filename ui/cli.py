@@ -1,3 +1,22 @@
+def select_difficulty() -> str:
+    """CLI выбор уровня сложности"""
+    print("\n=== Выбор уровня сложности ===")
+    print("1. Легкий (меньше рисков, больше ресурсов)")
+    print("2. Средний (стандартный баланс)")
+    print("3. Сложный (высокие риски, меньше ресурсов)")
+    
+    while True:
+        choice = input("Выберите уровень (1-3): ").strip()
+        if choice == "1":
+            return "easy"
+        elif choice == "2":
+            return "normal"
+        elif choice == "3":
+            return "hard"
+        else:
+            print("Неверный выбор. Попробуйте снова.")
+
+
 def show_main_menu(game) -> None:
     """
     Главное меню игрока. Работает в цикле до завершения игры.

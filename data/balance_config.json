@@ -9,9 +9,8 @@
       "starting_balance_multiplier": 1.0,
       "event_probability_multiplier": 1.0,
       "illness_resistance_multiplier": 1.0
-    },
-    "hard": {
-      "starting_balance_multiplier": 0.7,
+    },    "hard": {
+      "starting_balance_multiplier": 0.5,
       "event_probability_multiplier": 1.3,
       "illness_resistance_multiplier": 0.8
     }

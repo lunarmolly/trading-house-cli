@@ -5,26 +5,7 @@ from models.player import Player
 from models.courier import Courier
 from models.wagon import Wagon
 from core.game import Game
-from ui.cli import show_main_menu
-
-
-def select_difficulty() -> str:
-    """CLI выбор уровня сложности"""
-    print("\n=== Выбор уровня сложности ===")
-    print("1. Легкий (меньше рисков, больше ресурсов)")
-    print("2. Средний (стандартный баланс)")
-    print("3. Сложный (высокие риски, меньше ресурсов)")
-    
-    while True:
-        choice = input("Выберите уровень (1-3): ").strip()
-        if choice == "1":
-            return "easy"
-        elif choice == "2":
-            return "normal"
-        elif choice == "3":
-            return "hard"
-        else:
-            print("Неверный выбор. Попробуйте снова.")
+from ui.cli import show_main_menu, select_difficulty
 
 
 def load_game_config(difficulty: str) -> dict:
@@ -52,7 +33,7 @@ def create_player(config: dict, difficulty: str) -> Player:
     starting_balance = config["player"]["starting_balance"]
     if "difficulty_settings" in config and difficulty in config["difficulty_settings"]:
         settings = config["difficulty_settings"][difficulty]
-        starting_balance *= settings.get("starting_balance_multiplier", 1.0)
+        starting_balance = int(starting_balance * settings.get("starting_balance_multiplier", 1.0))
 
     # Создание курьеров
     couriers = []
