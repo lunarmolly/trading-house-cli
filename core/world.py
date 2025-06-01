@@ -6,16 +6,9 @@ from models.city import City
 # Корни для генерации латинских названий городов
 LATIN_ROOTS = ["Brund", "Cap", "Nerv", "Flor", "Agr", "Tar", "Lug", "Vent", "Aqua", "Tric", "Claud", "Mar", "Luc"]
 
+
 def generate_city_name(existing_names: List[str]) -> str:
-    """
-    Генерация уникального названия города.
-
-    Args:
-        existing_names (List[str]): Уже сгенерированные названия.
-
-    Returns:
-        str: Уникальное латинизированное имя города.
-    """
+    """Генерация уникального названия города."""
     while True:
         root = random.choice(LATIN_ROOTS)
         suffix = random.choice(["ium", "a", "um", "ona", "ensis"])
@@ -23,17 +16,9 @@ def generate_city_name(existing_names: List[str]) -> str:
         if name not in existing_names:
             return name
 
+
 def generate_world(config: dict, city_count: int = 7) -> List[City]:
-    """
-    Генерация мира: создаёт список городов.
-
-    Args:
-        config (dict): Конфигурационные данные из balance_config.json.
-        city_count (int): Сколько городов создать (по умолчанию 7).
-
-    Returns:
-        List[City]: Список объектов City.
-    """
+    """Генерация мира: создаёт список городов."""
     goods_names = [item["name"] for item in config["goods"]]
     cities = []
     used_names = set()
@@ -54,26 +39,39 @@ def generate_world(config: dict, city_count: int = 7) -> List[City]:
         for good in low_demand:
             demand_modifiers[good] = 0.8
 
-        # Создание города (ивент пока не задан)
+        # Создание города
         city = City(
             name=name,
             distance=distance,
             demand_modifiers=demand_modifiers,
-            current_event=None  # будет назначено динамически
+            current_event=None
         )
         cities.append(city)
 
     return cities
 
-def load_balance_config(path: str = "data/balance_config.json") -> dict:
-    """
-    Загружает конфигурацию баланса из JSON-файла.
 
-    Args:
-        path (str): Путь до конфигурационного файла.
-
-    Returns:
-        dict: Конфигурационные данные.
-    """
+def load_balance_config(
+        path: str = "data/balance_config.json",
+        difficulty: str = "normal"
+) -> dict:
     with open(path, encoding="utf-8") as f:
-        return json.load(f)
+        config = json.load(f)
+
+    # Применяем настройки сложности, если они есть
+    if "difficulty_settings" in config and "player" in config:
+        settings = config["difficulty_settings"].get(difficulty, {})
+
+        # Модифицируем стартовый баланс игрока
+        if "starting_balance_multiplier" in settings:
+            config["player"]["starting_balance"] = int(
+                config["player"]["starting_balance"] * settings["starting_balance_multiplier"]
+            )
+
+        # Модифицируем сопротивляемость болезням курьеров
+        if "illness_resistance_multiplier" in settings and "starting_couriers" in config["player"]:
+            for courier in config["player"]["starting_couriers"]:
+                if "illness_resistance" in courier:
+                    courier["illness_resistance"] *= settings["illness_resistance_multiplier"]
+
+    return config

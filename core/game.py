@@ -1,68 +1,54 @@
-import random
-from typing import List, Optional
+from typing import List
 from models.city import City
 from models.goods_item import GoodsItem
 from models.player import Player
 from models.caravan import Caravan
 from models.courier import Courier
 from models.wagon import Wagon
+from .events import choose_city_event  # Используется в update_city_events
 
 class Game:
     """
     Класс для управления основным игровым процессом.
     """
 
-    def __init__(self, player: Player, cities: List[City], goods: List[GoodsItem], config: dict):
+    def __init__(self, player: Player, cities: List[City], goods: List[GoodsItem], config: dict, difficulty: str):
         """
-        Инициализация игры.
+        Инициализация игры с учётом уровня сложности.
 
         Args:
             player (Player): Игрок.
             cities (List[City]): Города мира.
             goods (List[GoodsItem]): Все доступные товары.
             config (dict): Конфигурационные данные.
+            difficulty (str): Уровень сложности ("easy", "normal", "hard")
         """
         self.player = player
         self.cities = cities
         self.goods = goods
         self.config = config
+        self.difficulty = difficulty
         self.current_cycle = 1
         self.max_cycles = config["player"]["cycles_to_win"]
         self.victory_goal = config["player"]["victory_goal"]
         self.active_caravans: List[Caravan] = []
 
     def next_cycle(self) -> None:
-        """
-        Переход к следующему игровому циклу.
-        """
+        """Переход к следующему игровому циклу."""
         self.current_cycle += 1
         self.update_city_events()
 
     def update_city_events(self) -> None:
-        """
-        Обновляет события для всех городов.
-        """
-        names = [e["name"] for e in self.config["city_events"]]
-        weights = [e["probability"] for e in self.config["city_events"]]
+        """Обновляет события для всех городов с учётом уровня сложности."""
         for city in self.cities:
-            city.current_event = random.choices(names, weights=weights, k=1)[0]
+            city.current_event = choose_city_event(self.config, self.difficulty)
 
     def is_game_over(self) -> bool:
-        """
-        Проверяет завершение игры.
-
-        Returns:
-            bool: True, если достигнута цель или исчерпаны циклы.
-        """
+        """Проверяет завершение игры."""
         return self.current_cycle > self.max_cycles or self.player.balance >= self.victory_goal
 
     def has_won(self) -> bool:
-        """
-        Проверяет, достиг ли игрок цели.
-
-        Returns:
-            bool: True при победе.
-        """
+        """Проверяет, достиг ли игрок цели."""
         return self.player.balance >= self.victory_goal
 
     def form_caravan(
@@ -72,18 +58,7 @@ class Game:
         goods_selection: dict,
         city: City
     ) -> Caravan:
-        """
-        Создаёт караван, рассчитывает циклы прибытия и возврата.
-
-        Args:
-            courier (Courier): Курьер.
-            wagon (Wagon): Повозка.
-            goods_selection (dict): Товары.
-            city (City): Город назначения.
-
-        Returns:
-            Caravan: Новый караван.
-        """
+        """Создаёт караван, рассчитывает циклы прибытия и возврата."""
         departure_cycle = self.current_cycle
         travel_time = city.distance
         arrival_cycle = departure_cycle + travel_time
@@ -104,15 +79,19 @@ class Game:
         return caravan
 
     def update_caravans(self) -> None:
-        """
-        Обновляет все активные караваны: применяет события, завершает миссии.
-        """
+        """Обновляет активные караваны с учётом уровня сложности."""
         from core.caravan import update_caravan_event_once, process_completed_caravan
         goods_dict = {g.name: g for g in self.goods}
         finished = []
 
         for caravan in self.active_caravans:
-            update_caravan_event_once(caravan, self.current_cycle, self.config)
+            # Исправленный вызов с передачей difficulty
+            update_caravan_event_once(
+                caravan,
+                self.current_cycle,
+                self.config,
+                self.difficulty  # Теперь будет работать после изменения caravan.py
+            )
 
             report, done = process_completed_caravan(
                 caravan=caravan,

@@ -6,14 +6,20 @@ from models.goods_item import GoodsItem
 from core.events import choose_travel_event
 from core.finance import calculate_trip_expenses, calculate_sale_profit, generate_report
 
-def update_caravan_event_once(caravan: Caravan, current_cycle: int, config: dict) -> Optional[str]:
+def update_caravan_event_once(
+    caravan: Caravan,
+    current_cycle: int,
+    config: dict,
+    difficulty: str  # Добавлен параметр сложности
+) -> Optional[str]:
     """
-    Генерирует единственное событие для каравана, если ещё не было.
+    Генерирует единственное событие для каравана с учётом сложности.
 
     Args:
         caravan (Caravan): Караван в пути.
         current_cycle (int): Текущий цикл.
         config (dict): Конфигурация.
+        difficulty (str): Уровень сложности ("easy"/"normal"/"hard")
 
     Returns:
         Optional[str]: Название события, если произошло в этом цикле.
@@ -22,7 +28,8 @@ def update_caravan_event_once(caravan: Caravan, current_cycle: int, config: dict
         return None
 
     if caravan.departure_cycle <= current_cycle <= caravan.return_cycle:
-        event = choose_travel_event(config)
+        # Используем функцию с учётом сложности
+        event = choose_travel_event(config, difficulty)
         if event != "Ничего не произошло":
             caravan.event_occurred = event
             return event
@@ -38,16 +45,6 @@ def process_completed_caravan(
 ) -> Tuple[Dict, bool]:
     """
     Обрабатывает караван, завершивший миссию (достиг return_cycle).
-
-    Args:
-        caravan (Caravan): Завершённый караван.
-        player (Player): Игрок.
-        current_cycle (int): Текущий цикл.
-        goods_dict (Dict[str, GoodsItem]): Товары по имени.
-        config (dict): Баланс.
-
-    Returns:
-        Tuple[Dict, bool]: Финансовый отчёт и флаг завершения.
     """
     if current_cycle < caravan.return_cycle:
         return {}, False
@@ -65,17 +62,24 @@ def process_completed_caravan(
         extra_cost += random.randint(5, 10)
     elif event == "Смерть курьера":
         caravan.goods = {}
-        report = generate_report(0, 0, "Курьер погиб (в пути)", caravan.destination.current_event or "Нет события")
+        report = generate_report(
+            profit=0,
+            expenses=0,
+            event_path="Курьер погиб (в пути)",
+            event_city=caravan.destination.current_event or "Нет события",
+            sale_breakdown={}
+        )
         return report, True
 
     # === Применение потерь от разбойников ===
     if loss_ratio > 0:
-        for name in caravan.goods:
-            lost = int(caravan.goods[name] * loss_ratio)
-            caravan.goods[name] -= lost
+        caravan.goods = {
+            name: int(qty * (1 - loss_ratio))
+            for name, qty in caravan.goods.items()
+        }
 
-    # === Продажа товаров ===
-    profit, breakdown = calculate_sale_profit(
+    # === Продажа товаров и расчёт прибыли ===
+    profit, sale_breakdown = calculate_sale_profit(
         caravan=caravan,
         goods=goods_dict,
         config=config
@@ -83,12 +87,10 @@ def process_completed_caravan(
 
     # === Расходы ===
     total_days = caravan.days_to_travel * 2 + 1
-    base_expense = calculate_trip_expenses(total_days, config)
-    total_expense = base_expense + extra_cost
+    total_expense = calculate_trip_expenses(total_days, config) + extra_cost
 
-    # === Баланс игрока ===
-    net = profit - total_expense
-    player.adjust_balance(net)
+    # === Обновление баланса ===
+    player.adjust_balance(profit - total_expense)
 
     # === Финальный отчёт ===
     report = generate_report(
@@ -96,6 +98,6 @@ def process_completed_caravan(
         expenses=total_expense,
         event_path=event,
         event_city=caravan.destination.current_event or "Нет события",
-        sale_breakdown=breakdown
+        sale_breakdown=sale_breakdown
     )
     return report, True
