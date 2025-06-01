@@ -21,6 +21,7 @@ from core.game import Game
 # Импорты экранов из подпапки screens
 from ui.screens.difficulty_screen import DifficultyScreen, RomanTheme
 from ui.screens.main_menu_screen import MainMenuScreen
+from ui.screens.shop_inventory_screen import ShopInventoryScreen
 
 __all__ = ['TradingHouseGUI', 'RomanTheme']
 
@@ -293,7 +294,6 @@ Ave Caesar! Fortuna audaces iuvat!
     def show_cities_placeholder(self):
         """Заглушка для просмотра городов"""
         self.show_placeholder("Просмотр городов", "Список доступных городов для торговли")
-    
     def show_caravans_placeholder(self):
         """Заглушка для просмотра караванов"""
         self.show_placeholder("Активные караваны", "Статус отправленных караванов")
@@ -303,12 +303,29 @@ Ave Caesar! Fortuna audaces iuvat!
         self.show_placeholder("Отправка каравана", "Формирование и отправка нового каравана")
     
     def buy_goods_placeholder(self):
-        """Заглушка для покупки товаров"""
-        self.show_placeholder("Покупка товаров", "Закупка товаров для торговли")
+        """Экран покупки товаров"""
+        self.show_shop_inventory()
     
     def show_inventory_placeholder(self):
-        """Заглушка для просмотра склада"""
-        self.show_placeholder("Склад", "Просмотр товаров на складе")
+        """Экран просмотра склада (объединен с покупкой товаров)"""
+        self.show_shop_inventory()
+    
+    def show_shop_inventory(self):
+        """Показать экран покупки товаров и склада"""
+        if not self.game:
+            self.show_error("Ошибка: игра не инициализирована")
+            return
+            
+        self.clear_screen()
+        
+        # Создаем экран магазина и склада
+        shop_screen = ShopInventoryScreen(
+            parent=self.root,
+            game=self.game,
+            on_back=self.show_main_menu
+        )
+        shop_screen.pack(fill="both", expand=True)
+        self.current_frame = shop_screen
     
     def next_cycle_action(self):
         """Переход к следующему циклу"""
