@@ -41,15 +41,13 @@ class SendCaravanScreen(ctk.CTkFrame):
         )
         self.game = game
         self.on_back = on_back
-        
-        # Состояние экрана
+          # Состояние экрана
         self.selected_city: Optional[City] = None
         self.selected_goods: Dict[str, int] = {}
         self.current_capacity = 0
         
         # Элементы интерфейса
         self.city_buttons = {}
-        self.goods_rows = {}
         self.capacity_label: Optional[ctk.CTkLabel] = None
         self.send_button: Optional[ctk.CTkButton] = None
         
@@ -142,9 +140,15 @@ class SendCaravanScreen(ctk.CTkFrame):
         for caravan in self.game.active_caravans:
             if caravan.departure_cycle == self.game.current_cycle:
                 occupied_cities.add(caravan.destination.name)
-        
-        # Возвращаем доступные города
+          # Возвращаем доступные города
         return [city for city in self.game.cities if city.name not in occupied_cities]
+    
+    def get_caravan_info_for_city(self, city: City) -> str:
+        """Получить информацию о караване, отправленном в данный город"""
+        for caravan in self.game.active_caravans:
+            if caravan.departure_cycle == self.game.current_cycle and caravan.destination.name == city.name:
+                return f"Цикл {caravan.return_cycle}"
+        return "Занят"
     
     def create_no_caravan_message(self, parent):
         """Создание сообщения о невозможности отправки каравана"""
@@ -213,8 +217,7 @@ class SendCaravanScreen(ctk.CTkFrame):
             fg_color=RomanTheme.BACKGROUND,
             border_color=RomanTheme.FRAME_BORDER,
             border_width=2,
-            corner_radius=10
-        )
+            corner_radius=10        )
         cities_container.pack(fill="x", pady=(0, 20), padx=20)
         
         available_cities = self.get_available_cities()
@@ -230,16 +233,22 @@ class SendCaravanScreen(ctk.CTkFrame):
             no_cities_label.pack(pady=40)
             return
         
-        # Создаем кнопки для доступных городов
-        for i, city in enumerate(available_cities):
-            self.create_city_button(cities_container, city, i)
+        # Создаем кнопки для всех городов с разными состояниями
+        all_cities = self.game.cities
+        for i, city in enumerate(all_cities):
+            is_available = city in available_cities
+            self.create_city_button(cities_container, city, i, is_available)
     
-    def create_city_button(self, parent, city: City, index: int):
+    def create_city_button(self, parent, city: City, index: int, is_available: bool = True):
         """Создание кнопки выбора города"""
+        # Определяем цвет фрейма в зависимости от доступности
+        frame_color = RomanTheme.BACKGROUND if is_available else "#e8ddc7"
+        border_color = RomanTheme.FRAME_BORDER if is_available else RomanTheme.NEUTRAL
+        
         city_frame = ctk.CTkFrame(
             parent,
-            fg_color=RomanTheme.BACKGROUND,
-            border_color=RomanTheme.FRAME_BORDER,
+            fg_color=frame_color,
+            border_color=border_color,
             border_width=1,
             corner_radius=8
         )
@@ -248,15 +257,18 @@ class SendCaravanScreen(ctk.CTkFrame):
         # Информация о городе
         city_info_frame = ctk.CTkFrame(
             city_frame,
-            fg_color=RomanTheme.BACKGROUND
+            fg_color=frame_color
         )
         city_info_frame.pack(side="left", fill="both", expand=True, padx=10, pady=10)
         
+        # Название города с индикатором доступности
+        city_prefix = "🏛️" if is_available else "🚫"
+        city_suffix = "" if is_available else " (ЗАНЯТ)"
         city_name_label = ctk.CTkLabel(
             city_info_frame,
-            text=f"🏛️ {city.name}",
+            text=f"{city_prefix} {city.name}{city_suffix}",
             font=RomanTheme.FONT_BUTTON,
-            text_color=RomanTheme.TEXT,
+            text_color=RomanTheme.TEXT if is_available else RomanTheme.NEUTRAL,
             anchor="w"
         )
         city_name_label.pack(anchor="w")
@@ -280,22 +292,38 @@ class SendCaravanScreen(ctk.CTkFrame):
         )
         event_label.pack(anchor="w")
         
-        # Кнопка выбора
-        select_button = ctk.CTkButton(
-            city_frame,
-            text="⚡ Выбрать",
-            font=RomanTheme.FONT_BUTTON,
-            fg_color=RomanTheme.BUTTON,
-            hover_color=RomanTheme.BUTTON_HOVER,
-            text_color=RomanTheme.BACKGROUND,
-            corner_radius=8,
-            width=120,
-            height=40,
-            command=lambda c=city: self.select_city(c)
-        )
-        select_button.pack(side="right", padx=10, pady=10)
-        
-        self.city_buttons[city.name] = (city_frame, select_button)
+        # Кнопка выбора или информация о занятости
+        if is_available:
+            select_button = ctk.CTkButton(
+                city_frame,
+                text="⚡ Выбрать",
+                font=RomanTheme.FONT_BUTTON,
+                fg_color=RomanTheme.BUTTON,
+                hover_color=RomanTheme.BUTTON_HOVER,
+                text_color=RomanTheme.BACKGROUND,
+                corner_radius=8,
+                width=120,
+                height=40,
+                command=lambda c=city: self.select_city(c)
+            )
+            select_button.pack(side="right", padx=10, pady=10)
+            
+            self.city_buttons[city.name] = (city_frame, select_button)
+        else:
+            # Показываем информацию о караване
+            occupied_info = self.get_caravan_info_for_city(city)
+            disabled_button = ctk.CTkButton(
+                city_frame,
+                text=f"🚛 {occupied_info}",
+                font=RomanTheme.FONT_SMALL,
+                fg_color=RomanTheme.NEUTRAL,
+                text_color=RomanTheme.BACKGROUND,
+                corner_radius=8,
+                width=140,
+                height=40,
+                state="disabled"
+            )
+            disabled_button.pack(side="right", padx=10, pady=10)
     
     def select_city(self, city: City):
         """Выбор города для отправки каравана"""
@@ -323,7 +351,6 @@ class SendCaravanScreen(ctk.CTkFrame):
         )
         self.goods_section_frame.pack(fill="x", pady=(20, 15), padx=20)
         self.goods_section_frame.pack_propagate(False)
-        
         goods_title_label = ctk.CTkLabel(
             self.goods_section_frame,
             text="📦 ВЫБЕРИТЕ ТОВАРЫ ДЛЯ ОТПРАВКИ 📦",
@@ -341,6 +368,13 @@ class SendCaravanScreen(ctk.CTkFrame):
             corner_radius=10
         )
         self.goods_container.pack(fill="x", pady=(0, 20), padx=20)
+        
+        # Контейнер для строк товаров
+        self.goods_rows_frame = ctk.CTkFrame(
+            self.goods_container,
+            fg_color=RomanTheme.BACKGROUND
+        )
+        self.goods_rows_frame.pack(fill="x", padx=15, pady=(0, 15))
         
         if not self.selected_city:
             placeholder_label = ctk.CTkLabel(
@@ -398,34 +432,54 @@ class SendCaravanScreen(ctk.CTkFrame):
                 font=RomanTheme.FONT_TEXT,
                 text_color=RomanTheme.NEUTRAL,
                 justify="center"
-            )
+            )            
             no_goods_label.pack(pady=40)
             return
+        
+        # Пересоздаем контейнер для строк товаров
+        self.goods_rows_frame = ctk.CTkFrame(
+            self.goods_container,
+            fg_color=RomanTheme.BACKGROUND
+        )
+        self.goods_rows_frame.pack(fill="x", padx=15, pady=(0, 15))
         
         for i, (name, available_qty) in enumerate(available_goods):
             good_obj = goods_dict.get(name)
             if good_obj:
-                self.create_goods_row(self.goods_container, good_obj, available_qty, i)
+                self.create_goods_row(self.goods_rows_frame, good_obj, available_qty, i)
     
     def create_goods_row(self, parent, good: GoodsItem, available_qty: int, row_index: int):
-        """Создание строки с товаром"""
-        row_frame = ctk.CTkFrame(
+        """Создание строки с товаром с inline формой выбора"""
+        
+        # Основной контейнер строки
+        row_container = ctk.CTkFrame(
             parent,
-            fg_color=RomanTheme.BACKGROUND if row_index % 2 == 0 else "#ebe0d3",
-            corner_radius=5
+            fg_color=RomanTheme.BACKGROUND
         )
-        row_frame.pack(fill="x", pady=2, padx=15)
+        row_container.pack(fill="x", pady=2)
+        
+        # Основная строка товара
+        main_row_frame = ctk.CTkFrame(
+            row_container,
+            fg_color=RomanTheme.BACKGROUND if row_index % 2 == 0 else "#ebe0d3",
+            border_color=RomanTheme.NEUTRAL,
+            border_width=1,
+            corner_radius=5,
+            height=45
+        )
+        main_row_frame.pack(fill="x", side="top")
+        main_row_frame.pack_propagate(False)
         
         # Настройка сетки строки
-        row_frame.grid_columnconfigure(0, weight=3)
-        row_frame.grid_columnconfigure(1, weight=2)
-        row_frame.grid_columnconfigure(2, weight=2)
-        row_frame.grid_columnconfigure(3, weight=2)
-        row_frame.grid_columnconfigure(4, weight=1)
+        main_row_frame.grid_columnconfigure(0, weight=3)
+        main_row_frame.grid_columnconfigure(1, weight=2)
+        main_row_frame.grid_columnconfigure(2, weight=2)
+        main_row_frame.grid_columnconfigure(3, weight=2)
+        main_row_frame.grid_columnconfigure(4, weight=1)
         
         # Название товара
         name_label = ctk.CTkLabel(
-            row_frame,
+            main_row_frame,
             text=f"📦 {good.name}",
             font=RomanTheme.FONT_TEXT,
             text_color=RomanTheme.TEXT,
@@ -435,7 +489,7 @@ class SendCaravanScreen(ctk.CTkFrame):
         
         # Количество на складе
         stock_label = ctk.CTkLabel(
-            row_frame,
+            main_row_frame,
             text=f"{available_qty} ед.",
             font=RomanTheme.FONT_TEXT,
             text_color=RomanTheme.TEXT
@@ -443,46 +497,59 @@ class SendCaravanScreen(ctk.CTkFrame):
         stock_label.grid(row=0, column=1, padx=10, pady=8, sticky="ew")
         
         # Расчет ожидаемой цены в выбранном городе
-        expected_price = self.calculate_expected_price(good, self.selected_city)
+        expected_price = self.calculate_expected_price(good, self.selected_city) if self.selected_city else good.base_price
         price_label = ctk.CTkLabel(
-            row_frame,
+            main_row_frame,
             text=f"{expected_price:,} ден./ед.",
             font=RomanTheme.FONT_TEXT,
             text_color=RomanTheme.SUCCESS if expected_price > good.base_price else RomanTheme.TEXT
         )
         price_label.grid(row=0, column=2, padx=10, pady=8, sticky="ew")
         
-        # Поле ввода количества
-        current_qty = self.selected_goods.get(good.name, 0)
-        quantity_entry = ctk.CTkEntry(
-            row_frame,
-            placeholder_text="0",
+        # Отображение количества для отправки
+        selected_qty = self.selected_goods.get(good.name, 0)
+        quantity_text = f"{selected_qty} ед." if selected_qty > 0 else "-"
+        quantity_label = ctk.CTkLabel(
+            main_row_frame,
+            text=quantity_text,
             font=RomanTheme.FONT_TEXT,
-            width=60,
-            height=25
+            text_color=RomanTheme.ACCENT if selected_qty > 0 else RomanTheme.NEUTRAL
         )
-        quantity_entry.grid(row=0, column=3, padx=10, pady=8, sticky="ew")
+        quantity_label.grid(row=0, column=3, padx=10, pady=8, sticky="ew")
         
-        if current_qty > 0:
-            quantity_entry.delete(0, "end")
-            quantity_entry.insert(0, str(current_qty))
-        
-        # Кнопка добавления
-        add_button = ctk.CTkButton(
-            row_frame,
-            text="✓",
-            font=RomanTheme.FONT_SMALL,
-            fg_color=RomanTheme.SUCCESS,
-            hover_color="#5a7c1f",
+        # Кнопка выбора
+        button_text = "✓ Выбрано" if selected_qty > 0 else "⚡ Выбрать"
+        button_color = RomanTheme.SUCCESS if selected_qty > 0 else RomanTheme.BUTTON
+        select_button = ctk.CTkButton(
+            main_row_frame,
+            text=button_text,
+            font=RomanTheme.FONT_BUTTON,
+            fg_color=button_color,
+            hover_color=RomanTheme.BUTTON_HOVER,
             text_color=RomanTheme.BACKGROUND,
             corner_radius=5,
-            width=40,
-            height=25,
-            command=lambda: self.add_goods_to_caravan(good, quantity_entry, available_qty)
+            width=100,
+            height=30,
+            command=lambda g=good, container=row_container: self.toggle_selection_form(g, container, available_qty)
         )
-        add_button.grid(row=0, column=4, padx=10, pady=8)
+        select_button.grid(row=0, column=4, padx=5, pady=8)
         
-        self.goods_rows[good.name] = (row_frame, quantity_entry, add_button)
+        # Скрытая форма выбора количества (изначально не показана)
+        selection_form = ctk.CTkFrame(
+            row_container,
+            fg_color=RomanTheme.ACCENT,
+            corner_radius=8,
+            height=80
+        )
+        # Не показываем сразу - будет показана при клике на кнопку
+        
+        # Сохраняем ссылки для управления
+        setattr(row_container, 'selection_form', selection_form)
+        setattr(row_container, 'good', good)
+        setattr(row_container, 'available_qty', available_qty)
+        setattr(row_container, 'is_form_shown', False)
+        setattr(row_container, 'quantity_label', quantity_label)
+        setattr(row_container, 'select_button', select_button)
     
     def calculate_expected_price(self, good: GoodsItem, city: City) -> int:
         """Расчет ожидаемой цены товара в городе"""
@@ -492,8 +559,7 @@ class SendCaravanScreen(ctk.CTkFrame):
         # Модификатор события
         event = city.current_event or "Нет события"
         event_mod = self.game.config["event_modifiers"].get(event, {}).get(good.name, 1.0) - 1.0
-        
-        # Модификатор расстояния
+          # Модификатор расстояния
         distance_mod = city.distance * 0.02
         
         # Итоговый модификатор
@@ -501,47 +567,6 @@ class SendCaravanScreen(ctk.CTkFrame):
         final_modifier = 1.0 + total_percent
         
         return int(good.base_price * final_modifier)
-    
-    def add_goods_to_caravan(self, good: GoodsItem, quantity_entry: ctk.CTkEntry, max_qty: int):
-        """Добавление товара к караване"""
-        try:
-            quantity = int(quantity_entry.get() or "0")
-            
-            if quantity <= 0:
-                self.show_error("Количество должно быть больше 0")
-                return
-            
-            if quantity > max_qty:
-                self.show_error(f"Недостаточно товара на складе (доступно: {max_qty})")
-                return
-            
-            # Проверяем вместимость повозки
-            wagon = self.game.player.wagons[0]  # Берем первую доступную повозку
-            
-            # Подсчитываем текущую загрузку
-            current_load = sum(self.selected_goods.values())
-            new_load = current_load - self.selected_goods.get(good.name, 0) + quantity
-            
-            if new_load > wagon.capacity:
-                self.show_error(f"Превышена вместимость повозки!\nВместимость: {wagon.capacity}, попытка загрузить: {new_load}")
-                return
-            
-            # Добавляем товар
-            if quantity > 0:
-                self.selected_goods[good.name] = quantity
-            else:
-                self.selected_goods.pop(good.name, None)
-            
-            # Обновляем информацию о вместимости
-            self.update_capacity_info()
-            
-            # Обновляем кнопку отправки
-            self.update_send_button()
-            
-            self.show_success(f"Добавлено: {quantity} ед. '{good.name}'")
-            
-        except ValueError:
-            self.show_error("Введите корректное число")
     
     def create_capacity_info(self, parent):
         """Создание информации о вместимости"""
@@ -606,7 +631,6 @@ class SendCaravanScreen(ctk.CTkFrame):
         self.send_button_frame.pack(fill="x", pady=20, padx=20)
         
         self.update_send_button()
-    
     def update_send_button(self):
         """Обновление кнопки отправки"""
         # Очищаем фрейм
@@ -620,9 +644,10 @@ class SendCaravanScreen(ctk.CTkFrame):
         )
         
         if can_send:
+            city_name = self.selected_city.name.upper() if self.selected_city else "ВЫБЕРИТЕ ГОРОД"
             self.send_button = ctk.CTkButton(
                 self.send_button_frame,
-                text=f"🚀 ОТПРАВИТЬ КАРАВАН В {self.selected_city.name.upper()}",
+                text=f"🚀 ОТПРАВИТЬ КАРАВАН В {city_name}",
                 font=RomanTheme.FONT_BUTTON,
                 fg_color=RomanTheme.SUCCESS,
                 hover_color="#5a7c1f",
@@ -672,12 +697,20 @@ class SendCaravanScreen(ctk.CTkFrame):
                 goods_selection=self.selected_goods.copy(),
                 city=self.selected_city
             )
-            
-            # Показываем успешное сообщение
+              # Показываем успешное сообщение
             goods_list = ", ".join([f"{name} ({qty} ед.)" for name, qty in self.selected_goods.items()])
             success_message = f"✅ Караван успешно отправлен!\n\nНазначение: {self.selected_city.name}\nТовары: {goods_list}\nПрибытие: цикл {caravan.arrival_cycle}\nВозврат: цикл {caravan.return_cycle}"
             
+            # Сбрасываем состояние экрана
+            self.selected_city = None
+            self.selected_goods = {}
+            self.current_capacity = 0
+            
+            # Показываем сообщение об успехе
             self.show_success_message(success_message)
+            
+            # Обновляем интерфейс после отправки каравана
+            self.refresh_screen()
             
         except Exception as e:
             self.show_error(f"Ошибка при отправке каравана: {str(e)}")
@@ -741,17 +774,15 @@ class SendCaravanScreen(ctk.CTkFrame):
             justify="center"
         )
         message_label.pack(pady=(0, 10))
-        
-        # Автоматически скрываем сообщение через 3 секунды
+          # Автоматически скрываем сообщение через 3 секунды
         self.after(3000, lambda: message_frame.destroy())
-    
     def show_success_message(self, message: str):
         """Показать сообщение об успешной отправке каравана"""
         message_frame = ctk.CTkFrame(
             self,
             fg_color=RomanTheme.SUCCESS,
             corner_radius=10,
-            height=200
+            height=250  # Увеличена высота блока
         )
         message_frame.pack(fill="x", pady=(0, 10), padx=50)
         message_frame.pack_propagate(False)
@@ -762,31 +793,203 @@ class SendCaravanScreen(ctk.CTkFrame):
             font=RomanTheme.FONT_HEADER,
             text_color=RomanTheme.BACKGROUND
         )
-        title_label.pack(pady=(20, 10))
+        title_label.pack(pady=(15, 10))
+        
+        # Создаем прокручиваемый контейнер для текста сообщения
+        scrollable_frame = ctk.CTkScrollableFrame(
+            message_frame,
+            fg_color=RomanTheme.SUCCESS,
+            corner_radius=5,
+            width=600,
+            height=160  # Высота прокручиваемой области
+        )
+        scrollable_frame.pack(fill="both", expand=True, pady=(0, 15), padx=20)
         
         message_label = ctk.CTkLabel(
-            message_frame,
+            scrollable_frame,
             text=message,
             font=RomanTheme.FONT_TEXT,
             text_color=RomanTheme.BACKGROUND,
-            justify="center"
+            justify="left",  # Изменено на левое выравнивание для лучшей читаемости
+            wraplength=550  # Ограничиваем ширину текста для переноса строк
         )
-        message_label.pack(pady=(0, 10))
+        message_label.pack(pady=10, padx=10, anchor="w")
         
-        # Кнопка возврата в главное меню
-        return_button = ctk.CTkButton(
-            message_frame,
-            text="🏛️ Вернуться в главное меню",
-            font=RomanTheme.FONT_BUTTON,
-            fg_color=RomanTheme.BACKGROUND,
-            hover_color="#e0d5c8",
-            text_color=RomanTheme.SUCCESS,
-            corner_radius=8,
-            width=250,
-            height=40,
-            command=self.on_back
+        # Автоматически скрываем сообщение через 8 секунд (увеличено время)
+        self.after(8000, lambda: message_frame.destroy())
+    
+    def toggle_selection_form(self, good: GoodsItem, row_container, available_qty: int):
+        """Показать/скрыть форму выбора количества для конкретной строки"""
+        
+        # Скрываем все другие формы выбора
+        for widget in self.goods_rows_frame.winfo_children():
+            if hasattr(widget, 'selection_form') and hasattr(widget, 'is_form_shown'):
+                if widget != row_container and widget.is_form_shown:
+                    widget.selection_form.pack_forget()
+                    widget.is_form_shown = False
+        
+        # Переключаем текущую форму
+        if not row_container.is_form_shown:
+            self.show_selection_form(good, row_container, available_qty)
+        else:
+            self.hide_selection_form(row_container)
+    
+    def show_selection_form(self, good: GoodsItem, row_container, available_qty: int):
+        """Показать форму выбора количества для товара"""
+        selection_form = row_container.selection_form
+        
+        # Очищаем предыдущее содержимое
+        for widget in selection_form.winfo_children():
+            widget.destroy()
+        
+        # Настройка формы выбора
+        selection_form.pack(fill="x", pady=(5, 0))
+        selection_form.pack_propagate(False)
+        
+        # Создаем grid layout для формы
+        selection_form.grid_columnconfigure(0, weight=1)
+        selection_form.grid_columnconfigure(1, weight=1)
+        selection_form.grid_columnconfigure(2, weight=1)
+        selection_form.grid_columnconfigure(3, weight=1)
+        
+        # Информация о выборе
+        info_label = ctk.CTkLabel(
+            selection_form,
+            text=f"Выбор товара: {good.name} (доступно: {available_qty} ед.)",
+            font=RomanTheme.FONT_SMALL,
+            text_color=RomanTheme.BACKGROUND
         )
-        return_button.pack(pady=(10, 20))
+        info_label.grid(row=0, column=0, columnspan=3, padx=10, pady=(10, 5), sticky="w")
+        
+        # Поле ввода количества
+        quantity_label = ctk.CTkLabel(
+            selection_form,
+            text="Кол-во:",
+            font=RomanTheme.FONT_SMALL,
+            text_color=RomanTheme.BACKGROUND
+        )
+        quantity_label.grid(row=1, column=0, padx=(10, 5), pady=(0, 10), sticky="e")
+        
+        current_qty = self.selected_goods.get(good.name, 0)
+        quantity_entry = ctk.CTkEntry(
+            selection_form,
+            font=RomanTheme.FONT_SMALL,
+            width=80,
+            height=25,
+            placeholder_text="0"
+        )
+        quantity_entry.grid(row=1, column=1, padx=(0, 10), pady=(0, 10), sticky="w")
+        
+        if current_qty > 0:
+            quantity_entry.delete(0, "end")
+            quantity_entry.insert(0, str(current_qty))
+        
+        # Кнопка подтверждения
+        confirm_button = ctk.CTkButton(
+            selection_form,
+            text="✓ OK",
+            font=RomanTheme.FONT_SMALL,
+            fg_color=RomanTheme.SUCCESS,
+            hover_color="#5a7c1f",
+            text_color=RomanTheme.BACKGROUND,
+            corner_radius=5,
+            width=50,
+            height=25,
+            command=lambda: self.confirm_selection_inline(good, quantity_entry, row_container, available_qty)
+        )
+        confirm_button.grid(row=1, column=2, padx=5, pady=(0, 10))
+        
+        # Кнопка отмены
+        cancel_button = ctk.CTkButton(
+            selection_form,
+            text="✗",
+            font=RomanTheme.FONT_SMALL,
+            fg_color=RomanTheme.WARNING,
+            hover_color="#b8762f",
+            text_color=RomanTheme.BACKGROUND,
+            corner_radius=5,
+            width=30,
+            height=25,
+            command=lambda: self.hide_selection_form(row_container)
+        )
+        cancel_button.grid(row=1, column=3, padx=(0, 10), pady=(0, 10))
+        
+        # Отмечаем что форма показана
+        row_container.is_form_shown = True
+    
+    def hide_selection_form(self, row_container):
+        """Скрыть форму выбора количества"""
+        row_container.selection_form.pack_forget()
+        row_container.is_form_shown = False
+    
+    def confirm_selection_inline(self, good: GoodsItem, quantity_entry: ctk.CTkEntry, row_container, available_qty: int):
+        """Подтверждение выбора количества товара inline"""
+        try:
+            quantity = int(quantity_entry.get() or "0")
+            
+            if quantity < 0:
+                self.show_error("Количество не может быть отрицательным")
+                return
+            
+            if quantity > available_qty:
+                self.show_error(f"Недостаточно товара на складе (доступно: {available_qty})")
+                return
+            
+            # Проверяем вместимость повозки
+            wagon = self.game.player.wagons[0]
+            current_load = sum(self.selected_goods.values())
+            new_load = current_load - self.selected_goods.get(good.name, 0) + quantity
+            
+            if new_load > wagon.capacity:
+                self.show_error(f"Превышена вместимость повозки!\nВместимость: {wagon.capacity}, попытка загрузить: {new_load}")
+                return
+            
+            # Обновляем выбранные товары
+            if quantity > 0:
+                self.selected_goods[good.name] = quantity
+            else:
+                self.selected_goods.pop(good.name, None)
+            
+            # Обновляем отображение количества в строке
+            selected_qty = self.selected_goods.get(good.name, 0)
+            quantity_text = f"{selected_qty} ед." if selected_qty > 0 else "-"
+            row_container.quantity_label.configure(
+                text=quantity_text,
+                text_color=RomanTheme.ACCENT if selected_qty > 0 else RomanTheme.NEUTRAL
+            )
+            
+            # Обновляем кнопку выбора
+            button_text = "✓ Выбрано" if selected_qty > 0 else "⚡ Выбрать"
+            button_color = RomanTheme.SUCCESS if selected_qty > 0 else RomanTheme.BUTTON
+            row_container.select_button.configure(
+                text=button_text,
+                fg_color=button_color
+            )
+            
+            # Скрываем форму
+            self.hide_selection_form(row_container)
+            
+            # Обновляем информацию о вместимости
+            self.update_capacity_info()
+              # Обновляем кнопку отправки
+            self.update_send_button()
+            
+            if quantity > 0:
+                self.show_success(f"Выбрано: {quantity} ед. '{good.name}'")
+            else:
+                self.show_success(f"Товар '{good.name}' удален из выбора")
+            
+        except ValueError:
+            self.show_error("Введите корректное число")
+
+    def refresh_screen(self):
+        """Обновление всего экрана после отправки каравана"""
+        # Сначала уничтожаем все виджеты
+        for widget in self.winfo_children():
+            widget.destroy()
+        
+        # Пересоздаем весь интерфейс
+        self.create_widgets()
 
 
 # Тестирование (если запускается напрямую)
@@ -814,7 +1017,7 @@ if __name__ == "__main__":
             courier = Courier(name="Маркус", endurance=0, illness_resistance=0.9)
             wagon = Wagon(name="Стандартная повозка", capacity=200, durability=0.9)
             
-            player = Player(balance=5000, max_cycles=20)
+            player = Player(balance=5000)
             player.couriers = [courier]
             player.wagons = [wagon]
             player.inventory = {
