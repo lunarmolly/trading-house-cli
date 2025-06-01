@@ -23,6 +23,7 @@ from ui.screens.difficulty_screen import DifficultyScreen, RomanTheme
 from ui.screens.main_menu_screen import MainMenuScreen
 from ui.screens.shop_inventory_screen import ShopInventoryScreen
 from ui.screens.send_caravan_screen import SendCaravanScreen
+from ui.screens.cities_overview_screen import CitiesOverviewScreen
 
 __all__ = ['TradingHouseGUI', 'RomanTheme']
 
@@ -270,10 +271,9 @@ Ave Caesar! Fortuna audaces iuvat!
             self.show_error("Ошибка: игра не инициализирована")
             return
             
-        self.clear_screen()
-          # Создаем callbacks для действий меню
+        self.clear_screen()        # Создаем callbacks для действий меню
         menu_callbacks = {
-            "show_cities": self.show_cities_placeholder,
+            "show_cities": self.show_cities_overview,
             "show_caravans": self.show_caravans_placeholder,
             "send_caravan": self.send_caravan_screen,
             "buy_goods": self.buy_goods_placeholder,
@@ -290,11 +290,23 @@ Ave Caesar! Fortuna audaces iuvat!
         )
         main_menu_screen.pack(fill="both", expand=True)
         self.current_frame = main_menu_screen
-    
-    # Заглушки для действий меню (будут реализованы позже)
-    def show_cities_placeholder(self):
-        """Заглушка для просмотра городов"""
-        self.show_placeholder("Просмотр городов", "Список доступных городов для торговли")    
+      # Заглушки для действий меню (будут реализованы позже)
+    def show_cities_overview(self):
+        """Экран просмотра городов"""
+        if not self.game:
+            self.show_error("Ошибка: игра не инициализирована")
+            return
+            
+        self.clear_screen()
+        
+        # Создаем экран просмотра городов
+        cities_screen = CitiesOverviewScreen(
+            parent=self.root,
+            game=self.game,
+            on_back=self.show_main_menu
+        )
+        cities_screen.pack(fill="both", expand=True)
+        self.current_frame = cities_screen
         
     def show_caravans_placeholder(self):
         """Заглушка для просмотра караванов"""
