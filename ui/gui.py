@@ -108,8 +108,20 @@ class TradingHouseGUI:
             corner_radius=15
         )
         description_frame.pack(pady=30, padx=100, fill="both", expand=True)
-        
-        description_text = """
+          # Получаем цель из конфигурации (по умолчанию 15000)
+        config_path = "data/balance_config.json"
+        if not os.path.exists(config_path):
+            config_path = "balance_config.json"
+            
+        try:
+            import json
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config_data = json.load(f)
+            victory_goal = config_data.get("player", {}).get("victory_goal", 15000)
+        except:
+            victory_goal = 15000
+            
+        description_text = f"""
 Добро пожаловать в мир античной торговли!
 
 Вы — владелец торгового дома в великой Римской империи. 
@@ -120,7 +132,7 @@ class TradingHouseGUI:
 Управляйте курьерами, выбирайте товары с умом, учитывайте 
 спрос в различных городах и остерегайтесь опасностей дорог.
 
-Достигните цели в 10,000 денариев за ограниченное время 
+Достигните цели в {victory_goal:,} денариев за ограниченное время 
 и станьте владельцем роскошной виллы у моря!
 
 Ave Caesar! Fortuna audaces iuvat!
@@ -259,7 +271,7 @@ Ave Caesar! Fortuna audaces iuvat!
                 capacity=wagon_data["capacity"],
                 durability=wagon_data.get("durability", 0.75)
             ) for wagon_data in config["player"].get("starting_wagons", [])
-        ]        # Создаем игрока с начальными параметрами
+        ]        # Создаем игрока с начальными параметрами (баланс - позиционный аргумент)
         player = Player(starting_balance)
         player.couriers = couriers
         player.wagons = wagons
@@ -356,8 +368,7 @@ Ave Caesar! Fortuna audaces iuvat!
             self.show_error("Ошибка: игра не инициализирована")
             return
             
-        self.clear_screen()
-        
+        self.clear_screen()        
         # Создаем экран магазина и склада
         shop_screen = ShopInventoryScreen(
             parent=self.root,
@@ -366,7 +377,7 @@ Ave Caesar! Fortuna audaces iuvat!
         )
         shop_screen.pack(fill="both", expand=True)
         self.current_frame = shop_screen
-    
+        
     def next_cycle_action(self):
         """Переход к следующему циклу"""
         if not self.game:
@@ -375,12 +386,15 @@ Ave Caesar! Fortuna audaces iuvat!
         self.game.next_cycle()
         self.game.update_caravans()
         
-        # Проверяем, не закончилась ли игра
+        # Проверяем достижение цели победы или истечения времени, используя метод is_game_over из Game
         if self.game.is_game_over():
+            print(f"DEBUG: Игра завершена! Проверка условия: баланс {self.game.player.balance} >= цель {self.game.victory_goal}? {self.game.player.balance >= self.game.victory_goal}")
+            print(f"DEBUG: Или проверка цикла: текущий {self.game.current_cycle} > максимум {self.game.max_cycles}? {self.game.current_cycle > self.game.max_cycles}")
             self.show_game_over()
-        else:
-            # Обновляем главное меню
-            self.show_main_menu()
+            return
+        
+        # Обновляем главное меню
+        self.show_main_menu()
     
     def quit_to_start_screen(self):
         """Возврат к стартовому экрану"""
@@ -430,7 +444,7 @@ Ave Caesar! Fortuna audaces iuvat!
             width=250,
             height=40,
             command=self.show_main_menu
-        )
+        )        
         back_button.pack(pady=20)
     
     def show_game_over(self):
@@ -440,6 +454,7 @@ Ave Caesar! Fortuna audaces iuvat!
             
         self.clear_screen()
         
+        # Создаем основной фрейм с орнаментом
         main_frame = ctk.CTkFrame(
             self.root,
             fg_color=RomanTheme.BACKGROUND,
@@ -448,44 +463,138 @@ Ave Caesar! Fortuna audaces iuvat!
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
         self.current_frame = main_frame
         
-        if self.game.has_won():
-            # Победа
-            title = "🏆 VICTORIA! 🏆"
-            message = f"Поздравляем! Вы достигли цели!\n\nВаш итоговый баланс: {self.game.player.balance:,} денариев\nЦиклов потрачено: {self.game.current_cycle}\n\nВы стали владельцем роскошной виллы у моря!"
-            color = "#6b8e23"  # SUCCESS color
-        else:
-            # Поражение
-            title = "💀 GAME OVER 💀"
-            message = f"Время истекло!\n\nВаш итоговый баланс: {self.game.player.balance:,} денариев\nЦель не достигнута.\n\nФортуна была не на вашей стороне..."
-            color = "#cd853f"  # WARNING color
-        
-        # Заголовок
-        title_label = ctk.CTkLabel(
+        # Орнаментальные декоративные элементы (рамки)
+        top_ornament = ctk.CTkFrame(
             main_frame,
+            fg_color=RomanTheme.BACKGROUND,
+            height=50,
+            border_width=5,
+            border_color=RomanTheme.BUTTON,
+            corner_radius=0
+        )
+        top_ornament.pack(fill="x", pady=(10, 0), padx=100)
+        
+        # Конфигурация в зависимости от исхода
+        if self.game.has_won():
+            # ПОБЕДА
+            title = "🏆 ПОБЕДА 🏆"
+            subtitle = "GLORIA ROMAE"
+            message = f"Поздравляем, достойный гражданин Рима!\n\nВы накопили {self.game.player.balance:,} денариев и смогли выплатить\nдолг влиятельному патрицию!\n\nТеперь вы владеете прекрасной виллой на побережье и\nможете наслаждаться жизнью уважаемого торговца.\n\nSenatus Populusque Romanus приветствует вас!"
+            background_img = "🏛️"
+            color = "#6b8e23"  # Зелёный (успех)
+            icon = "🏆"
+        else:
+            # ПОРАЖЕНИЕ
+            title = "💀 ИГРА ОКОНЧЕНА 💀"
+            subtitle = "INFAMIA ET SERVITUDO"
+            message = f"Время истекло!\n\nВы не смогли заработать {self.game.victory_goal:,} денариев\nвлиятельному патрицию.\n\nВаш итоговый баланс: {self.game.player.balance:,} денариев\n\nВы стали рабом и будете отрабатывать долг годами.\nФортуна отвернулась от вас..."
+            background_img = "⛓️"
+            color = "#cd5c5c"  # Красноватый (опасность)
+            icon = "💀"
+        
+        # Центральная панель с результатом
+        result_frame = ctk.CTkFrame(
+            main_frame,
+            fg_color=RomanTheme.BACKGROUND,
+            border_width=5,
+            border_color=RomanTheme.BUTTON,
+            corner_radius=15
+        )
+        result_frame.pack(fill="both", expand=True, padx=100, pady=20)
+        
+        # Создаем отдельный контейнер для содержимого в result_frame
+        content_frame = ctk.CTkFrame(
+            result_frame,
+            fg_color=RomanTheme.BACKGROUND,
+            corner_radius=0
+        )
+        content_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        # Верхний декоративный элемент
+        bg_top = ctk.CTkLabel(
+            content_frame,
+            text=background_img * 5,  # Больше символов для лучшей видимости
+            font=("Georgia", 40),
+            text_color="#f0e5d180"  # Менее прозрачный
+        )
+        bg_top.pack(pady=(5, 20))
+        
+        # Заголовок (крупный)
+        title_label = ctk.CTkLabel(
+            content_frame,
             text=title,
-            font=RomanTheme.FONT_TITLE,
+            font=("Georgia", 48, "bold"),
             text_color=color
         )
-        title_label.pack(pady=50)
+        title_label.pack(pady=(0, 0))
         
-        # Сообщение
-        message_label = ctk.CTkLabel(
-            main_frame,
-            text=message,
-            font=RomanTheme.FONT_TEXT,
-            text_color=RomanTheme.TEXT,
-            justify="center"
+        # Подзаголовок на латыни
+        latin_label = ctk.CTkLabel(
+            content_frame,
+            text=subtitle,
+            font=("Georgia", 28, "italic"),
+            text_color=RomanTheme.ACCENT
         )
-        message_label.pack(pady=30, expand=True)
+        latin_label.pack(pady=(0, 15))
         
-        # Кнопки
+        # Декоративный разделитель
+        separator_frame = ctk.CTkFrame(
+            content_frame,
+            height=3,
+            width=400,
+            fg_color=RomanTheme.BUTTON
+        )
+        separator_frame.pack(pady=10)
+        
+        # Блок с сообщением в декоративной рамке с более заметным фоном
+        message_container = ctk.CTkFrame(
+            content_frame,
+            fg_color="#f5efe2",
+            border_width=3,
+            border_color=RomanTheme.ACCENT,
+            corner_radius=10
+        )
+        message_container.pack(pady=20, padx=40, fill="x", expand=True)
+        
+        # Текст сообщения с высоким контрастом и более крупным шрифтом
+        message_label = ctk.CTkLabel(
+            message_container,
+            text=message,
+            font=("Georgia", 22, "bold"),  # Увеличен размер шрифта
+            text_color="#2d2722",  # Более темный для контрастности
+            justify="center",
+            wraplength=700
+        )
+        message_label.pack(pady=25, padx=50)
+        
+        # Циклы и статистика
+        stats_label = ctk.CTkLabel(
+            content_frame,
+            text=f"{icon} Циклов прошло: {self.game.current_cycle} из {self.game.max_cycles} {icon}",
+            font=("Georgia", 18, "bold"),  # Увеличен размер шрифта
+            text_color=RomanTheme.ACCENT
+        )
+        stats_label.pack(pady=(20, 20))
+        
+        # Нижний орнамент
+        bottom_ornament = ctk.CTkFrame(
+            main_frame,
+            fg_color=RomanTheme.BACKGROUND,
+            height=50,
+            border_width=5,
+            border_color=RomanTheme.BUTTON,
+            corner_radius=0
+        )
+        bottom_ornament.pack(fill="x", pady=(0, 20), padx=100)
+        
+        # Контейнер для кнопок
         button_frame = ctk.CTkFrame(
             main_frame,
             fg_color=RomanTheme.BACKGROUND
         )
-        button_frame.pack(pady=30)
+        button_frame.pack(pady=20)
         
-        # Новая игра
+        # Кнопка "Новая игра"
         new_game_button = ctk.CTkButton(
             button_frame,
             text="🎮 Новая игра",
@@ -500,13 +609,13 @@ Ave Caesar! Fortuna audaces iuvat!
         )
         new_game_button.pack(side="left", padx=10)
         
-        # Главное меню
+        # Кнопка "Главное меню"
         menu_button = ctk.CTkButton(
             button_frame,
             text="🏛️ Главное меню",
             font=RomanTheme.FONT_BUTTON,
             fg_color=RomanTheme.NEUTRAL,
-            hover_color="#999999",
+            hover_color="#999999", 
             text_color=RomanTheme.TEXT,
             corner_radius=8,
             width=200,
