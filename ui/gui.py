@@ -22,6 +22,7 @@ from core.game import Game
 from ui.screens.difficulty_screen import DifficultyScreen, RomanTheme
 from ui.screens.main_menu_screen import MainMenuScreen
 from ui.screens.shop_inventory_screen import ShopInventoryScreen
+from ui.screens.send_caravan_screen import SendCaravanScreen
 
 __all__ = ['TradingHouseGUI', 'RomanTheme']
 
@@ -270,16 +271,16 @@ Ave Caesar! Fortuna audaces iuvat!
             return
             
         self.clear_screen()
-        
-        # Создаем callbacks для действий меню
+          # Создаем callbacks для действий меню
         menu_callbacks = {
             "show_cities": self.show_cities_placeholder,
             "show_caravans": self.show_caravans_placeholder,
-            "send_caravan": self.send_caravan_placeholder,
+            "send_caravan": self.send_caravan_screen,
             "buy_goods": self.buy_goods_placeholder,
             # "show_inventory": self.show_inventory_placeholder,
             "next_cycle": self.next_cycle_action,
-            "quit_game": self.quit_to_start_screen        }
+            "quit_game": self.quit_to_start_screen
+        }
         
         # Создаем экран главного меню
         main_menu_screen = MainMenuScreen(
@@ -293,14 +294,28 @@ Ave Caesar! Fortuna audaces iuvat!
     # Заглушки для действий меню (будут реализованы позже)
     def show_cities_placeholder(self):
         """Заглушка для просмотра городов"""
-        self.show_placeholder("Просмотр городов", "Список доступных городов для торговли")
+        self.show_placeholder("Просмотр городов", "Список доступных городов для торговли")    
+        
     def show_caravans_placeholder(self):
         """Заглушка для просмотра караванов"""
         self.show_placeholder("Активные караваны", "Статус отправленных караванов")
     
-    def send_caravan_placeholder(self):
-        """Заглушка для отправки каравана"""
-        self.show_placeholder("Отправка каравана", "Формирование и отправка нового каравана")
+    def send_caravan_screen(self):
+        """Экран отправки каравана"""
+        if not self.game:
+            self.show_error("Ошибка: игра не инициализирована")
+            return
+            
+        self.clear_screen()
+        
+        # Создаем экран отправки каравана
+        send_caravan_screen = SendCaravanScreen(
+            parent=self.root,
+            game=self.game,
+            on_back=self.show_main_menu
+        )
+        send_caravan_screen.pack(fill="both", expand=True)
+        self.current_frame = send_caravan_screen
     
     def buy_goods_placeholder(self):
         """Экран покупки товаров"""
