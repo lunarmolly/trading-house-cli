@@ -25,6 +25,7 @@ def select_difficulty() -> str:
         print("Ошибка: введите 1, 2 или 3")
 
 
+
 def main():
     print("=== Добро пожаловать в Торговый Дом! ===")
 

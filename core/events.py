@@ -49,6 +49,7 @@ def choose_event(event_pool: List[Dict], difficulty: str = "normal") -> str:
     return random.choices(event_names, weights=normalized_weights, k=1)[0]
 
 
+
 def choose_city_event(config: dict, difficulty: str = "normal") -> str:
     """
     Выбирает городское событие с учетом уровня сложности.

@@ -8,6 +8,7 @@ from models.wagon import Wagon
 from .events import choose_city_event  # Используется в update_city_events
 
 
+
 class Game:
     """
     Класс для управления основным игровым процессом.
