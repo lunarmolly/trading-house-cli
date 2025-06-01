@@ -1,4 +1,14 @@
+"""
+Торговый Дом - Игра о торговле в Древнем Риме
+
+Запуск:
+    python main.py          # GUI версия (по умолчанию)
+    python main.py gui      # GUI версия
+    python main.py cli      # CLI версия
+"""
+
 import os
+import sys
 from core.world import load_balance_config, generate_world
 from core.goods import load_goods
 from models.player import Player
@@ -66,6 +76,40 @@ def create_player(config: dict, difficulty: str) -> Player:
 
 
 def main():
+    """Главная функция с выбором интерфейса"""
+    # Проверяем аргументы командной строки
+    interface = "gui"  # По умолчанию GUI
+    
+    if len(sys.argv) > 1:
+        if sys.argv[1].lower() in ["cli", "console", "terminal"]:
+            interface = "cli"
+        elif sys.argv[1].lower() in ["gui", "window", "graphical"]:
+            interface = "gui"
+    
+    if interface == "gui":
+        # Запуск GUI версии
+        try:
+            from ui.gui import TradingHouseGUI
+            app = TradingHouseGUI()
+            app.run()
+        except ImportError as e:
+            print("Ошибка: Не удалось запустить GUI. Убедитесь, что установлен customtkinter.")
+            print(f"Детали ошибки: {e}")
+            print("Установите зависимости: pip install customtkinter")
+            print("Переключаемся на CLI версию...")
+            interface = "cli"
+        except Exception as e:
+            print(f"Ошибка при запуске GUI: {e}")
+            print("Переключаемся на CLI версию...")
+            interface = "cli"
+    
+    if interface == "cli":
+        # Запуск CLI версии
+        run_cli_game()
+
+
+def run_cli_game():
+    """Запуск CLI версии игры"""
     # Выбор сложности через CLI
     difficulty = select_difficulty()
 
@@ -90,4 +134,12 @@ def main():
 
 
 if __name__ == "__main__":
+    print("🏛️ Торговый Дом - Древний Рим 🏛️")
+    print("=" * 40)
+    
+    # Показать подсказку о параметрах, если не указаны
+    if len(sys.argv) == 1:
+        print("Запуск GUI версии...")
+        print("Для CLI версии используйте: python main.py cli")
+    
     main()

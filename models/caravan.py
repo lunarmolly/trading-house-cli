@@ -30,6 +30,16 @@ class Caravan:
     return_cycle: int
     event_occurred: Optional[str] = None  # общее событие, можно расширить для "туда"/"обратно"
 
+    @property
+    def goods_carried(self) -> Dict[str, int]:
+        """
+        Свойство для обратной совместимости с GUI.
+        
+        Returns:
+            Dict[str, int]: Товары в караване.
+        """
+        return self.goods
+
     def total_goods(self) -> int:
         """
         Подсчитывает общее количество товаров в караване.
