@@ -77,7 +77,7 @@ class Game:
             arrival_cycle=arrival_cycle,
             return_cycle=return_cycle
         )
-
+        
         self.active_caravans.append(caravan)
         return caravan
 
@@ -88,6 +88,10 @@ class Game:
         finished = []
 
         for caravan in self.active_caravans:
+            # Пропускаем уже обработанные караваны
+            if caravan.resolved:
+                continue
+                
             # Исправленный вызов с передачей difficulty
             update_caravan_event_once(
                 caravan,
@@ -116,6 +120,9 @@ class Game:
                 print(f"  Прибыль: {report['profit']}")
                 print(f"  Расходы: {report['expenses']}")
                 print(f"  Чистый доход: {report['net']}")
+                # Помечаем караван как обработанный и добавляем в список для удаления
+                caravan.resolved = True
+                finished.append(caravan)
 
         for c in finished:
             self.active_caravans.remove(c)

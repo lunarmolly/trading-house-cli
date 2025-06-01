@@ -19,6 +19,7 @@ class Caravan:
         arrival_cycle (int): Игровой цикл, когда он прибудет в город.
         return_cycle (int): Игровой цикл, когда он вернётся обратно.
         event_occurred (Optional[str]): Событие, произошедшее в пути (туда или обратно).
+        resolved (bool): Флаг, указывающий, был ли караван уже обработан при возвращении.
     """
     courier: Courier
     wagon: Wagon
@@ -29,6 +30,7 @@ class Caravan:
     arrival_cycle: int
     return_cycle: int
     event_occurred: Optional[str] = None  # общее событие, можно расширить для "туда"/"обратно"
+    resolved: bool = False  # флаг для предотвращения повторной обработки
 
     @property
     def goods_carried(self) -> Dict[str, int]:
