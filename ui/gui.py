@@ -17,7 +17,10 @@ from models.player import Player
 from models.courier import Courier
 from models.wagon import Wagon
 from core.game import Game
-from screens.difficulty_screen import DifficultyScreen, RomanTheme
+
+# Импорты экранов из подпапки screens
+from ui.screens.difficulty_screen import DifficultyScreen, RomanTheme
+from ui.screens.main_menu_screen import MainMenuScreen
 
 __all__ = ['TradingHouseGUI', 'RomanTheme']
 
@@ -176,7 +179,7 @@ Ave Caesar! Fortuna audaces iuvat!
             text_color=RomanTheme.NEUTRAL
         )
         version_label.pack(side="bottom", pady=20)
-      def show_difficulty_selection(self):
+    def show_difficulty_selection(self):
         """Экран выбора сложности"""
         self.clear_screen()
         
@@ -245,27 +248,90 @@ Ave Caesar! Fortuna audaces iuvat!
                 name=courier_data["name"],
                 endurance=courier_data.get("endurance", 0),
                 illness_resistance=illness_resistance
-            ))
-
-        # Создание повозок
+            ))        # Создание повозок
         wagons = [
             Wagon(
                 name=wagon_data["name"],
                 capacity=wagon_data["capacity"],
                 durability=wagon_data.get("durability", 0.75)
             ) for wagon_data in config["player"].get("starting_wagons", [])
-        ]
-
-        return Player(
-            balance=starting_balance,
-            couriers=couriers,
-            wagons=wagons
-        )
+        ]        # Создаем игрока с начальными параметрами
+        player = Player(starting_balance)
+        player.couriers = couriers
+        player.wagons = wagons
+        
+        return player
     
     def show_main_menu(self):
         """Показать главное меню игры"""
-        # Здесь будет реализовано главное меню игры
-        # Пока просто заглушка
+        if not self.game:
+            self.show_error("Ошибка: игра не инициализирована")
+            return
+            
+        self.clear_screen()
+        
+        # Создаем callbacks для действий меню
+        menu_callbacks = {
+            "show_cities": self.show_cities_placeholder,
+            "show_caravans": self.show_caravans_placeholder,
+            "send_caravan": self.send_caravan_placeholder,
+            "buy_goods": self.buy_goods_placeholder,
+            "show_inventory": self.show_inventory_placeholder,
+            "next_cycle": self.next_cycle_action,
+            "quit_game": self.quit_to_start_screen        }
+        
+        # Создаем экран главного меню
+        main_menu_screen = MainMenuScreen(
+            parent=self.root,
+            game=self.game,
+            callbacks=menu_callbacks
+        )
+        main_menu_screen.pack(fill="both", expand=True)
+        self.current_frame = main_menu_screen
+    
+    # Заглушки для действий меню (будут реализованы позже)
+    def show_cities_placeholder(self):
+        """Заглушка для просмотра городов"""
+        self.show_placeholder("Просмотр городов", "Список доступных городов для торговли")
+    
+    def show_caravans_placeholder(self):
+        """Заглушка для просмотра караванов"""
+        self.show_placeholder("Активные караваны", "Статус отправленных караванов")
+    
+    def send_caravan_placeholder(self):
+        """Заглушка для отправки каравана"""
+        self.show_placeholder("Отправка каравана", "Формирование и отправка нового каравана")
+    
+    def buy_goods_placeholder(self):
+        """Заглушка для покупки товаров"""
+        self.show_placeholder("Покупка товаров", "Закупка товаров для торговли")
+    
+    def show_inventory_placeholder(self):
+        """Заглушка для просмотра склада"""
+        self.show_placeholder("Склад", "Просмотр товаров на складе")
+    
+    def next_cycle_action(self):
+        """Переход к следующему циклу"""
+        if not self.game:
+            return
+            
+        self.game.next_cycle()
+        self.game.update_caravans()
+        
+        # Проверяем, не закончилась ли игра
+        if self.game.is_game_over():
+            self.show_game_over()
+        else:
+            # Обновляем главное меню
+            self.show_main_menu()
+    
+    def quit_to_start_screen(self):
+        """Возврат к стартовому экрану"""
+        self.game = None
+        self.create_start_screen()
+    
+    def show_placeholder(self, title: str, description: str):
+        """Показать заглушку для экрана"""
         self.clear_screen()
         
         main_frame = ctk.CTkFrame(
@@ -279,53 +345,118 @@ Ave Caesar! Fortuna audaces iuvat!
         # Заголовок
         title_label = ctk.CTkLabel(
             main_frame,
-            text="🏛️ ТОРГОВЫЙ ДОМ 🏛️",
+            text=f"🏛️ {title.upper()} 🏛️",
             font=RomanTheme.FONT_TITLE,
             text_color=RomanTheme.ACCENT
         )
-        title_label.pack(pady=30)
+        title_label.pack(pady=50)
         
-        # Информация о игре
-        if self.game:
-            info_text = f"""
-Цикл: {self.game.current_cycle} / {self.game.max_cycles}
-Баланс: {self.game.player.balance} денариев
-Уровень сложности: {self.game.difficulty.upper()}
-            """
-            
-            info_label = ctk.CTkLabel(
-                main_frame,
-                text=info_text.strip(),
-                font=RomanTheme.FONT_HEADER,
-                text_color=RomanTheme.TEXT,
-                justify="center"
-            )
-            info_label.pack(pady=20)
-        
-        # Заглушка - главное меню будет реализовано позже
-        placeholder_label = ctk.CTkLabel(
+        # Описание
+        desc_label = ctk.CTkLabel(
             main_frame,
-            text="🚧 Главное меню игры в разработке 🚧\n\nВозвращаемся к стартовому экрану...",
+            text=f"🚧 {description} 🚧\n\nЭтот экран еще в разработке",
             font=RomanTheme.FONT_TEXT,
             text_color=RomanTheme.TEXT,
             justify="center"
         )
-        placeholder_label.pack(pady=50, expand=True)
+        desc_label.pack(pady=30, expand=True)
         
         # Кнопка возврата
         back_button = ctk.CTkButton(
             main_frame,
-            text="← Вернуться к началу",
+            text="← Вернуться в главное меню",
             font=RomanTheme.FONT_TEXT,
             fg_color=RomanTheme.BUTTON,
             hover_color=RomanTheme.BUTTON_HOVER,
             text_color=RomanTheme.BACKGROUND,
             corner_radius=8,
-            width=200,
+            width=250,
             height=40,
-            command=self.create_start_screen
+            command=self.show_main_menu
         )
         back_button.pack(pady=20)
+    
+    def show_game_over(self):
+        """Показать экран окончания игры"""
+        if not self.game:
+            return
+            
+        self.clear_screen()
+        
+        main_frame = ctk.CTkFrame(
+            self.root,
+            fg_color=RomanTheme.BACKGROUND,
+            corner_radius=0
+        )
+        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        self.current_frame = main_frame
+        
+        if self.game.has_won():
+            # Победа
+            title = "🏆 VICTORIA! 🏆"
+            message = f"Поздравляем! Вы достигли цели!\n\nВаш итоговый баланс: {self.game.player.balance:,} денариев\nЦиклов потрачено: {self.game.current_cycle}\n\nВы стали владельцем роскошной виллы у моря!"
+            color = "#6b8e23"  # SUCCESS color
+        else:
+            # Поражение
+            title = "💀 GAME OVER 💀"
+            message = f"Время истекло!\n\nВаш итоговый баланс: {self.game.player.balance:,} денариев\nЦель не достигнута.\n\nФортуна была не на вашей стороне..."
+            color = "#cd853f"  # WARNING color
+        
+        # Заголовок
+        title_label = ctk.CTkLabel(
+            main_frame,
+            text=title,
+            font=RomanTheme.FONT_TITLE,
+            text_color=color
+        )
+        title_label.pack(pady=50)
+        
+        # Сообщение
+        message_label = ctk.CTkLabel(
+            main_frame,
+            text=message,
+            font=RomanTheme.FONT_TEXT,
+            text_color=RomanTheme.TEXT,
+            justify="center"
+        )
+        message_label.pack(pady=30, expand=True)
+        
+        # Кнопки
+        button_frame = ctk.CTkFrame(
+            main_frame,
+            fg_color=RomanTheme.BACKGROUND
+        )
+        button_frame.pack(pady=30)
+        
+        # Новая игра
+        new_game_button = ctk.CTkButton(
+            button_frame,
+            text="🎮 Новая игра",
+            font=RomanTheme.FONT_BUTTON,
+            fg_color=RomanTheme.BUTTON,
+            hover_color=RomanTheme.BUTTON_HOVER,
+            text_color=RomanTheme.BACKGROUND,
+            corner_radius=8,
+            width=200,
+            height=50,
+            command=self.show_difficulty_selection
+        )
+        new_game_button.pack(side="left", padx=10)
+        
+        # Главное меню
+        menu_button = ctk.CTkButton(
+            button_frame,
+            text="🏛️ Главное меню",
+            font=RomanTheme.FONT_BUTTON,
+            fg_color=RomanTheme.NEUTRAL,
+            hover_color="#999999",
+            text_color=RomanTheme.TEXT,
+            corner_radius=8,
+            width=200,
+            height=50,
+            command=self.create_start_screen
+        )
+        menu_button.pack(side="left", padx=10)
     
     def show_error(self, message: str):
         """Показать сообщение об ошибке"""
