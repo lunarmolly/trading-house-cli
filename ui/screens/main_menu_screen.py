@@ -183,12 +183,13 @@ class MainMenuScreen(ctk.CTkFrame):
         )
         inventory_label.pack(side="left")
         
-        # Цель игры
-        goal_progress = (self.game.player.balance / 10000) * 100
+        # Цель игры - используем значение из game.victory_goal вместо фиксированного 10000
+        victory_goal = self.game.victory_goal
+        goal_progress = (self.game.player.balance / victory_goal) * 100
         goal_color = RomanTheme.SUCCESS if goal_progress >= 100 else RomanTheme.WARNING
         goal_label = ctk.CTkLabel(
             additional_info_frame,
-            text=f"🎯 Цель: {goal_progress:.1f}% (10,000 денариев)",
+            text=f"🎯 Цель: {goal_progress:.1f}% ({victory_goal:,} денариев)",
             font=RomanTheme.FONT_TEXT,
             text_color=goal_color
         )
