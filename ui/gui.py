@@ -454,33 +454,21 @@ Ave Caesar! Fortuna audaces iuvat!
             
         self.clear_screen()
         
-        # Создаем основной фрейм с орнаментом
+        # Создаем основной фрейм
         main_frame = ctk.CTkFrame(
             self.root,
             fg_color=RomanTheme.BACKGROUND,
             corner_radius=0
         )
-        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        main_frame.pack(fill="both", expand=True)
         self.current_frame = main_frame
         
-        # Орнаментальные декоративные элементы (рамки)
-        top_ornament = ctk.CTkFrame(
-            main_frame,
-            fg_color=RomanTheme.BACKGROUND,
-            height=50,
-            border_width=5,
-            border_color=RomanTheme.BUTTON,
-            corner_radius=0
-        )
-        top_ornament.pack(fill="x", pady=(10, 0), padx=100)
-        
-        # Конфигурация в зависимости от исхода
+        # Определяем параметры в зависимости от исхода
         if self.game.has_won():
             # ПОБЕДА
             title = "🏆 ПОБЕДА 🏆"
             subtitle = "GLORIA ROMAE"
             message = f"Поздравляем, достойный гражданин Рима!\n\nВы накопили {self.game.player.balance:,} денариев и смогли выплатить\nдолг влиятельному патрицию!\n\nТеперь вы владеете прекрасной виллой на побережье и\nможете наслаждаться жизнью уважаемого торговца.\n\nSenatus Populusque Romanus приветствует вас!"
-            background_img = "🏛️"
             color = "#6b8e23"  # Зелёный (успех)
             icon = "🏆"
         else:
@@ -488,111 +476,90 @@ Ave Caesar! Fortuna audaces iuvat!
             title = "💀 ИГРА ОКОНЧЕНА 💀"
             subtitle = "INFAMIA ET SERVITUDO"
             message = f"Время истекло!\n\nВы не смогли заработать {self.game.victory_goal:,} денариев\nвлиятельному патрицию.\n\nВаш итоговый баланс: {self.game.player.balance:,} денариев\n\nВы стали рабом и будете отрабатывать долг годами.\nФортуна отвернулась от вас..."
-            background_img = "⛓️"
             color = "#cd5c5c"  # Красноватый (опасность)
             icon = "💀"
         
-        # Центральная панель с результатом
-        result_frame = ctk.CTkFrame(
+        # Создаем верхний заголовок
+        header_frame = ctk.CTkFrame(
             main_frame,
             fg_color=RomanTheme.BACKGROUND,
-            border_width=5,
-            border_color=RomanTheme.BUTTON,
-            corner_radius=15
+            height=100
         )
-        result_frame.pack(fill="both", expand=True, padx=100, pady=20)
-        
-        # Создаем отдельный контейнер для содержимого в result_frame
-        content_frame = ctk.CTkFrame(
-            result_frame,
-            fg_color=RomanTheme.BACKGROUND,
-            corner_radius=0
-        )
-        content_frame.pack(fill="both", expand=True, padx=20, pady=20)
-        
-        # Верхний декоративный элемент
-        bg_top = ctk.CTkLabel(
-            content_frame,
-            text=background_img * 5,  # Больше символов для лучшей видимости
-            font=("Georgia", 40),
-            text_color="#f0e5d180"  # Менее прозрачный
-        )
-        bg_top.pack(pady=(5, 20))
+        header_frame.pack(fill="x", padx=50, pady=(30, 0))
         
         # Заголовок (крупный)
         title_label = ctk.CTkLabel(
-            content_frame,
+            header_frame,
             text=title,
-            font=("Georgia", 48, "bold"),
+            font=("Georgia", 52, "bold"),
             text_color=color
         )
-        title_label.pack(pady=(0, 0))
+        title_label.pack(pady=(10, 5))
         
         # Подзаголовок на латыни
         latin_label = ctk.CTkLabel(
-            content_frame,
+            header_frame,
             text=subtitle,
-            font=("Georgia", 28, "italic"),
+            font=("Georgia", 32, "italic"),
             text_color=RomanTheme.ACCENT
         )
-        latin_label.pack(pady=(0, 15))
+        latin_label.pack(pady=(0, 10))
         
-        # Декоративный разделитель
-        separator_frame = ctk.CTkFrame(
-            content_frame,
-            height=3,
-            width=400,
-            fg_color=RomanTheme.BUTTON
-        )
-        separator_frame.pack(pady=10)
-        
-        # Блок с сообщением в декоративной рамке с более заметным фоном
-        message_container = ctk.CTkFrame(
-            content_frame,
-            fg_color="#f5efe2",
-            border_width=3,
-            border_color=RomanTheme.ACCENT,
-            corner_radius=10
-        )
-        message_container.pack(pady=20, padx=40, fill="x", expand=True)
-        
-        # Текст сообщения с высоким контрастом и более крупным шрифтом
-        message_label = ctk.CTkLabel(
-            message_container,
-            text=message,
-            font=("Georgia", 22, "bold"),  # Увеличен размер шрифта
-            text_color="#2d2722",  # Более темный для контрастности
-            justify="center",
-            wraplength=700
-        )
-        message_label.pack(pady=25, padx=50)
-        
-        # Циклы и статистика
-        stats_label = ctk.CTkLabel(
-            content_frame,
-            text=f"{icon} Циклов прошло: {self.game.current_cycle} из {self.game.max_cycles} {icon}",
-            font=("Georgia", 18, "bold"),  # Увеличен размер шрифта
-            text_color=RomanTheme.ACCENT
-        )
-        stats_label.pack(pady=(20, 20))
-        
-        # Нижний орнамент
-        bottom_ornament = ctk.CTkFrame(
+        # Горизонтальная линия под заголовком
+        separator = ctk.CTkFrame(
             main_frame,
-            fg_color=RomanTheme.BACKGROUND,
-            height=50,
-            border_width=5,
-            border_color=RomanTheme.BUTTON,
+            height=3,
+            fg_color=color,
             corner_radius=0
         )
-        bottom_ornament.pack(fill="x", pady=(0, 20), padx=100)
+        separator.pack(fill="x", padx=150, pady=(5, 20))
         
-        # Контейнер для кнопок
+        # Создаем центральный блок для сообщения
+        message_frame = ctk.CTkFrame(
+            main_frame,
+            fg_color="#f8f5f0",  # Светлый фон для контраста
+            corner_radius=15,
+            border_width=2,
+            border_color=color
+        )
+        message_frame.pack(fill="both", expand=True, padx=150, pady=20)
+        
+        # Сообщение
+        message_text = ctk.CTkTextbox(
+            message_frame,
+            fg_color="#f8f5f0",
+            text_color="#2d2722",
+            font=("Georgia", 24),
+            activate_scrollbars=False,
+            wrap="word",
+            height=300
+        )
+        message_text.pack(fill="both", expand=True, padx=50, pady=40)
+        message_text.insert("1.0", message)
+        message_text.configure(state="disabled")  # Делаем только для чтения
+        
+        # Статистика
+        stats_frame = ctk.CTkFrame(
+            main_frame,
+            fg_color=RomanTheme.BACKGROUND,
+            height=40
+        )
+        stats_frame.pack(fill="x", padx=150, pady=(0, 20))
+        
+        stats_label = ctk.CTkLabel(
+            stats_frame,
+            text=f"{icon} Циклов прошло: {self.game.current_cycle} из {self.game.max_cycles} {icon}",
+            font=("Georgia", 20, "bold"),
+            text_color=color
+        )
+        stats_label.pack(pady=10)
+        
+        # Кнопки
         button_frame = ctk.CTkFrame(
             main_frame,
             fg_color=RomanTheme.BACKGROUND
         )
-        button_frame.pack(pady=20)
+        button_frame.pack(pady=30)
         
         # Кнопка "Новая игра"
         new_game_button = ctk.CTkButton(
@@ -603,11 +570,11 @@ Ave Caesar! Fortuna audaces iuvat!
             hover_color=RomanTheme.BUTTON_HOVER,
             text_color=RomanTheme.BACKGROUND,
             corner_radius=8,
-            width=200,
-            height=50,
+            width=220,
+            height=60,
             command=self.show_difficulty_selection
         )
-        new_game_button.pack(side="left", padx=10)
+        new_game_button.pack(side="left", padx=15)
         
         # Кнопка "Главное меню"
         menu_button = ctk.CTkButton(
@@ -615,14 +582,14 @@ Ave Caesar! Fortuna audaces iuvat!
             text="🏛️ Главное меню",
             font=RomanTheme.FONT_BUTTON,
             fg_color=RomanTheme.NEUTRAL,
-            hover_color="#999999", 
+            hover_color="#999999",
             text_color=RomanTheme.TEXT,
             corner_radius=8,
-            width=200,
-            height=50,
+            width=220,
+            height=60,
             command=self.create_start_screen
         )
-        menu_button.pack(side="left", padx=10)
+        menu_button.pack(side="left", padx=15)
     
     def show_error(self, message: str):
         """Показать сообщение об ошибке"""
