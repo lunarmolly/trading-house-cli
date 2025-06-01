@@ -99,7 +99,6 @@ class ShopInventoryScreen(ctk.CTkFrame):
         self.create_shop_section(main_scrollable)
         self.create_inventory_section(main_scrollable)
         self.create_bottom_panel()
-    
     def create_shop_section(self, parent):
         """Создание секции покупки товаров"""
         
@@ -121,228 +120,261 @@ class ShopInventoryScreen(ctk.CTkFrame):
         )
         shop_title_label.pack(expand=True)
         
-        # Фрейм для списка товаров
-        goods_frame = ctk.CTkFrame(
+        # Фрейм для списка товаров с прокруткой
+        self.goods_container = ctk.CTkFrame(
             parent,
             fg_color=RomanTheme.BACKGROUND,
             border_color=RomanTheme.FRAME_BORDER,
             border_width=2,
             corner_radius=10
         )
-        goods_frame.pack(fill="x", pady=(0, 20), padx=20)
+        self.goods_container.pack(fill="x", pady=(0, 20), padx=20)
         
-        # Заголовки таблицы
+        # Заголовки таблицы (фиксированные)
         headers_frame = ctk.CTkFrame(
-            goods_frame,
+            self.goods_container,
             fg_color=RomanTheme.BUTTON,
-            corner_radius=8
+            corner_radius=8,
+            height=45
         )
-        headers_frame.pack(fill="x", pady=15, padx=15)
+        headers_frame.pack(fill="x", pady=(15, 10), padx=15)
+        headers_frame.pack_propagate(False)
         
-        # Создание заголовков
+        # Создание заголовков с фиксированными столбцами
         self.create_table_header(headers_frame)
         
-        # Список товаров
-        for good in self.game.goods:
-            self.create_goods_row(goods_frame, good)
-        
-        # Область для покупки (изначально скрыта)
-        self.purchase_frame = ctk.CTkFrame(
-            parent,
-            fg_color=RomanTheme.BACKGROUND,
-            border_color=RomanTheme.ACCENT,
-            border_width=2,
-            corner_radius=10
+        # Контейнер для строк товаров
+        self.goods_rows_frame = ctk.CTkFrame(
+            self.goods_container,
+            fg_color=RomanTheme.BACKGROUND
         )
-        # Не показываем сразу
-    
+        self.goods_rows_frame.pack(fill="x", padx=15, pady=(0, 15))
+        
+        # Список товаров
+        for i, good in enumerate(self.game.goods):
+            self.create_goods_row(self.goods_rows_frame, good, i)
     def create_table_header(self, parent):
-        """Создание заголовков таблицы товаров"""
+        """Создание заголовков таблицы товаров с фиксированной шириной"""
+        
+        # Настройка grid для равномерного распределения
+        parent.grid_columnconfigure(0, weight=3, minsize=200)  # Товар
+        parent.grid_columnconfigure(1, weight=2, minsize=150)  # Категория
+        parent.grid_columnconfigure(2, weight=2, minsize=150)  # Цена
+        parent.grid_columnconfigure(3, weight=2, minsize=120)  # Действие
         
         headers = [
-            ("Товар", 0.3),
-            ("Категория", 0.2),
-            ("Цена за ед.", 0.2),
-            ("Действие", 0.3)
+            "Товар",
+            "Категория", 
+            "Цена за ед.",
+            "Действие"
         ]
         
-        for i, (header_text, width_ratio) in enumerate(headers):
+        for i, header_text in enumerate(headers):
             header_label = ctk.CTkLabel(
                 parent,
                 text=header_text,
                 font=RomanTheme.FONT_BUTTON,
                 text_color=RomanTheme.BACKGROUND
             )
-            header_label.grid(row=0, column=i, padx=10, pady=10, sticky="ew")
-            parent.grid_columnconfigure(i, weight=int(width_ratio * 10))
+            header_label.grid(row=0, column=i, padx=5, pady=5, sticky="ew")
     
-    def create_goods_row(self, parent, good: GoodsItem):
-        """Создание строки с товаром"""
+    def create_goods_row(self, parent, good: GoodsItem, row_index: int):
+        """Создание строки с товаром с inline формой покупки"""
         
-        row_frame = ctk.CTkFrame(
+        # Основной контейнер строки
+        row_container = ctk.CTkFrame(
             parent,
+            fg_color=RomanTheme.BACKGROUND
+        )
+        row_container.pack(fill="x", pady=2)
+        
+        # Основная строка товара
+        main_row_frame = ctk.CTkFrame(
+            row_container,
             fg_color=RomanTheme.BACKGROUND,
             border_color=RomanTheme.NEUTRAL,
             border_width=1,
-            corner_radius=5
+            corner_radius=5,
+            height=45
         )
-        row_frame.pack(fill="x", pady=5, padx=15)
+        main_row_frame.pack(fill="x", side="top")
+        main_row_frame.pack_propagate(False)
+        
+        # Настройка сетки точно как в заголовке
+        main_row_frame.grid_columnconfigure(0, weight=3, minsize=200)
+        main_row_frame.grid_columnconfigure(1, weight=2, minsize=150)
+        main_row_frame.grid_columnconfigure(2, weight=2, minsize=150)
+        main_row_frame.grid_columnconfigure(3, weight=2, minsize=120)
         
         # Название товара
         name_label = ctk.CTkLabel(
-            row_frame,
+            main_row_frame,
             text=good.name,
             font=RomanTheme.FONT_TEXT,
             text_color=RomanTheme.TEXT,
             anchor="w"
         )
-        name_label.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        name_label.grid(row=0, column=0, padx=10, pady=8, sticky="ew")
         
         # Категория
         category_label = ctk.CTkLabel(
-            row_frame,
+            main_row_frame,
             text=good.category,
             font=RomanTheme.FONT_SMALL,
             text_color=RomanTheme.NEUTRAL,
             anchor="center"
         )
-        category_label.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+        category_label.grid(row=0, column=1, padx=5, pady=8, sticky="ew")
         
         # Цена
         price_label = ctk.CTkLabel(
-            row_frame,
+            main_row_frame,
             text=f"{good.base_price:,} ден.",
             font=RomanTheme.FONT_PRICE,
             text_color=RomanTheme.ACCENT,
             anchor="center"
         )
-        price_label.grid(row=0, column=2, padx=10, pady=10, sticky="ew")
+        price_label.grid(row=0, column=2, padx=5, pady=8, sticky="ew")
         
         # Кнопка покупки
         buy_button = ctk.CTkButton(
-            row_frame,
+            main_row_frame,
             text="🛒 Купить",
             font=RomanTheme.FONT_BUTTON,
             fg_color=RomanTheme.BUTTON,
             hover_color=RomanTheme.BUTTON_HOVER,
             text_color=RomanTheme.BACKGROUND,
             corner_radius=5,
-            width=120,
-            height=35,
-            command=lambda g=good: self.start_purchase(g)
+            width=100,
+            height=30,
+            command=lambda g=good, container=row_container: self.toggle_purchase_form(g, container)
         )
-        buy_button.grid(row=0, column=3, padx=10, pady=10)
+        buy_button.grid(row=0, column=3, padx=5, pady=8)
         
-        # Настройка сетки
-        for i in range(4):
-            row_frame.grid_columnconfigure(i, weight=[3, 2, 2, 3][i])
+        # Скрытая форма покупки (изначально не показана)
+        purchase_form = ctk.CTkFrame(
+            row_container,
+            fg_color=RomanTheme.ACCENT,
+            corner_radius=8,
+            height=80
+        )
+        # Не показываем сразу - будет показана при клике на кнопку
+        
+        # Сохраняем ссылки для управления
+        setattr(row_container, 'purchase_form', purchase_form)
+        setattr(row_container, 'good', good)
+        setattr(row_container, 'is_form_shown', False)
     
-    def start_purchase(self, good: GoodsItem):
-        """Начать процесс покупки товара"""
-        self.selected_good = good
+    def toggle_purchase_form(self, good: GoodsItem, row_container):
+        """Показать/скрыть форму покупки для конкретной строки"""
         
-        # Показываем область покупки
-        self.purchase_frame.pack(fill="x", pady=(0, 20), padx=20)
+        # Скрываем все другие формы покупки
+        for widget in self.goods_rows_frame.winfo_children():
+            if hasattr(widget, 'purchase_form') and hasattr(widget, 'is_form_shown'):
+                if widget != row_container and widget.is_form_shown:
+                    widget.purchase_form.pack_forget()
+                    widget.is_form_shown = False
+        
+        # Переключаем текущую форму
+        if not row_container.is_form_shown:
+            self.show_purchase_form(good, row_container)
+        else:
+            self.hide_purchase_form(row_container)
+    
+    def show_purchase_form(self, good: GoodsItem, row_container):
+        """Показать форму покупки для товара"""
+        purchase_form = row_container.purchase_form
         
         # Очищаем предыдущее содержимое
-        for widget in self.purchase_frame.winfo_children():
+        for widget in purchase_form.winfo_children():
             widget.destroy()
         
-        # Заголовок покупки
-        purchase_title = ctk.CTkLabel(
-            self.purchase_frame,
-            text=f"🛒 Покупка: {good.name}",
-            font=RomanTheme.FONT_HEADER,
-            text_color=RomanTheme.ACCENT
-        )
-        purchase_title.pack(pady=(15, 10))
+        # Настройка формы покупки
+        purchase_form.pack(fill="x", pady=(5, 0))
+        purchase_form.pack_propagate(False)
         
-        # Информация о товаре
-        info_frame = ctk.CTkFrame(
-            self.purchase_frame,
-            fg_color=RomanTheme.BACKGROUND
-        )
-        info_frame.pack(pady=10)
+        # Создаем grid layout для формы
+        purchase_form.grid_columnconfigure(0, weight=1)
+        purchase_form.grid_columnconfigure(1, weight=1)
+        purchase_form.grid_columnconfigure(2, weight=1)
+        purchase_form.grid_columnconfigure(3, weight=1)
         
-        info_text = f"Категория: {good.category} | Цена за единицу: {good.base_price:,} денариев"
+        # Информация о покупке
         info_label = ctk.CTkLabel(
-            info_frame,
-            text=info_text,
-            font=RomanTheme.FONT_TEXT,
-            text_color=RomanTheme.TEXT
+            purchase_form,
+            text=f"Покупка: {good.name} ({good.base_price:,} ден./ед.)",
+            font=RomanTheme.FONT_SMALL,
+            text_color=RomanTheme.BACKGROUND
         )
-        info_label.pack(pady=10, padx=20)
+        info_label.grid(row=0, column=0, columnspan=2, padx=10, pady=(10, 5), sticky="w")
         
         # Поле ввода количества
-        input_frame = ctk.CTkFrame(
-            self.purchase_frame,
-            fg_color=RomanTheme.BACKGROUND
-        )
-        input_frame.pack(pady=10)
-        
         quantity_label = ctk.CTkLabel(
-            input_frame,
-            text="Количество:",
-            font=RomanTheme.FONT_TEXT,
-            text_color=RomanTheme.TEXT
+            purchase_form,
+            text="Кол-во:",
+            font=RomanTheme.FONT_SMALL,
+            text_color=RomanTheme.BACKGROUND
         )
-        quantity_label.pack(side="left", padx=(20, 10))
+        quantity_label.grid(row=1, column=0, padx=(10, 5), pady=(0, 10), sticky="e")
         
-        self.quantity_entry = ctk.CTkEntry(
-            input_frame,
-            font=RomanTheme.FONT_TEXT,
-            width=100,
+        quantity_entry = ctk.CTkEntry(
+            purchase_form,
+            font=RomanTheme.FONT_SMALL,
+            width=60,
+            height=25,
             placeholder_text="1"
         )
-        self.quantity_entry.pack(side="left", padx=(0, 20))
-        
-        # Кнопки действий
-        buttons_frame = ctk.CTkFrame(
-            self.purchase_frame,
-            fg_color=RomanTheme.BACKGROUND
-        )
-        buttons_frame.pack(pady=(10, 15))
+        quantity_entry.grid(row=1, column=1, padx=(0, 10), pady=(0, 10), sticky="w")
         
         # Кнопка подтверждения
         confirm_button = ctk.CTkButton(
-            buttons_frame,
-            text="✅ Подтвердить покупку",
-            font=RomanTheme.FONT_BUTTON,
+            purchase_form,
+            text="✓ OK",
+            font=RomanTheme.FONT_SMALL,
             fg_color=RomanTheme.SUCCESS,
             hover_color="#5a7c1f",
             text_color=RomanTheme.BACKGROUND,
-            corner_radius=8,
-            width=180,
-            height=40,
-            command=self.confirm_purchase
+            corner_radius=5,
+            width=50,
+            height=25,
+            command=lambda: self.confirm_purchase_inline(good, quantity_entry, row_container)
         )
-        confirm_button.pack(side="left", padx=10)
+        confirm_button.grid(row=1, column=2, padx=5, pady=(0, 10))
         
         # Кнопка отмены
         cancel_button = ctk.CTkButton(
-            buttons_frame,
-            text="❌ Отмена",
-            font=RomanTheme.FONT_BUTTON,
+            purchase_form,
+            text="✗",
+            font=RomanTheme.FONT_SMALL,
             fg_color=RomanTheme.WARNING,
             hover_color="#b8762f",
             text_color=RomanTheme.BACKGROUND,
-            corner_radius=8,
-            width=120,
-            height=40,
-            command=self.cancel_purchase
+            corner_radius=5,
+            width=30,
+            height=25,
+            command=lambda: self.hide_purchase_form(row_container)
         )
-        cancel_button.pack(side="left", padx=10)
+        cancel_button.grid(row=1, column=3, padx=(0, 10), pady=(0, 10))
         
         # Фокус на поле ввода
-        self.quantity_entry.focus()
-    
-    def confirm_purchase(self):
-        """Подтвердить покупку"""
-        if not self.selected_good or not self.quantity_entry:
-            return
+        quantity_entry.focus()
         
+        # Отмечаем, что форма показана
+        row_container.is_form_shown = True
+        self.selected_good = good
+        self.quantity_entry = quantity_entry
+    
+    def hide_purchase_form(self, row_container):
+        """Скрыть форму покупки"""
+        row_container.purchase_form.pack_forget()
+        row_container.is_form_shown = False
+        self.selected_good = None
+        self.quantity_entry = None
+    
+    def confirm_purchase_inline(self, good: GoodsItem, quantity_entry: ctk.CTkEntry, row_container):
+        """Подтвердить покупку из inline формы"""
         try:
-            quantity_text = self.quantity_entry.get().strip()
+            quantity_text = quantity_entry.get().strip()
             if not quantity_text:
                 self.show_error("Введите количество товара")
                 return
@@ -352,33 +384,27 @@ class ShopInventoryScreen(ctk.CTkFrame):
                 self.show_error("Количество должно быть положительным числом")
                 return
             
-            total_price = self.selected_good.base_price * quantity
+            total_price = good.base_price * quantity
             
             if total_price > self.game.player.balance:
                 self.show_error(f"Недостаточно средств!\nТребуется: {total_price:,} денариев\nДоступно: {self.game.player.balance:,} денариев")
                 return
             
             # Выполняем покупку
-            self.game.player.add_goods(self.selected_good, quantity)
+            self.game.player.add_goods(good, quantity)
             self.game.player.adjust_balance(-total_price)
             
             # Показываем успешное сообщение
-            self.show_success(f"Успешно куплено!\n{quantity} ед. '{self.selected_good.name}'\nза {total_price:,} денариев")
+            self.show_success(f"Успешно куплено!\n{quantity} ед. '{good.name}' за {total_price:,} денариев")
+            
+            # Скрываем форму покупки
+            self.hide_purchase_form(row_container)
             
             # Обновляем интерфейс
             self.refresh_screen()
-            self.cancel_purchase()
             
         except ValueError:
             self.show_error("Введите корректное число")
-    
-    def cancel_purchase(self):
-        """Отменить покупку"""
-        if self.purchase_frame:
-            self.purchase_frame.pack_forget()
-        self.selected_good = None
-        self.quantity_entry = None
-    
     def create_inventory_section(self, parent):
         """Создание секции склада"""
         
@@ -612,11 +638,10 @@ if __name__ == "__main__":
     
     # Создаем мок-игру
     mock_game = MockGame()
-    
-    # Создаем экран
+      # Создаем экран
     screen = ShopInventoryScreen(
         parent=root,
-        game=mock_game,
+        game=mock_game,  # type: ignore
         on_back=test_back
     )
     screen.pack(fill="both", expand=True)

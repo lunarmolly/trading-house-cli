@@ -277,7 +277,7 @@ Ave Caesar! Fortuna audaces iuvat!
             "show_caravans": self.show_caravans_placeholder,
             "send_caravan": self.send_caravan_placeholder,
             "buy_goods": self.buy_goods_placeholder,
-            "show_inventory": self.show_inventory_placeholder,
+            # "show_inventory": self.show_inventory_placeholder,
             "next_cycle": self.next_cycle_action,
             "quit_game": self.quit_to_start_screen        }
         
@@ -306,9 +306,9 @@ Ave Caesar! Fortuna audaces iuvat!
         """Экран покупки товаров"""
         self.show_shop_inventory()
     
-    def show_inventory_placeholder(self):
-        """Экран просмотра склада (объединен с покупкой товаров)"""
-        self.show_shop_inventory()
+    # def show_inventory_placeholder(self):
+    #     """Экран просмотра склада (объединен с покупкой товаров)"""
+    #     self.show_shop_inventory()
     
     def show_shop_inventory(self):
         """Показать экран покупки товаров и склада"""
