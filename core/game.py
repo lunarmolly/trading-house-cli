@@ -9,6 +9,7 @@ from .events import choose_city_event  # Используется в update_city
 
 
 
+
 class Game:
     """
     Класс для управления основным игровым процессом.

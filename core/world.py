@@ -59,6 +59,7 @@ def load_balance_config(
         config = json.load(f)
 
 
+
     # Применяем настройки сложности, если они есть
     if "difficulty_settings" in config and "player" in config:
         settings = config["difficulty_settings"].get(difficulty, {})

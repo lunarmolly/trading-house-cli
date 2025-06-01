@@ -54,6 +54,7 @@ def process_completed_caravan(
     extra_cost = 0
 
 
+
     # === Обработка события ===
     if event == "Набег разбойников":
         loss_ratio = random.uniform(0.3, 0.5)
