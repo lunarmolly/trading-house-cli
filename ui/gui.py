@@ -24,6 +24,7 @@ from ui.screens.main_menu_screen import MainMenuScreen
 from ui.screens.shop_inventory_screen import ShopInventoryScreen
 from ui.screens.send_caravan_screen import SendCaravanScreen
 from ui.screens.cities_overview_screen import CitiesOverviewScreen
+from ui.screens.caravans_status_screen import CaravansStatusScreen
 
 __all__ = ['TradingHouseGUI', 'RomanTheme']
 
@@ -274,7 +275,7 @@ Ave Caesar! Fortuna audaces iuvat!
         self.clear_screen()        # Создаем callbacks для действий меню
         menu_callbacks = {
             "show_cities": self.show_cities_overview,
-            "show_caravans": self.show_caravans_placeholder,
+            "show_caravans": self.show_caravans_status,
             "send_caravan": self.send_caravan_screen,
             "buy_goods": self.buy_goods_placeholder,
             # "show_inventory": self.show_inventory_placeholder,
@@ -307,10 +308,22 @@ Ave Caesar! Fortuna audaces iuvat!
         )
         cities_screen.pack(fill="both", expand=True)
         self.current_frame = cities_screen
+    def show_caravans_status(self):
+        """Экран просмотра статуса караванов"""
+        if not self.game:
+            self.show_error("Ошибка: игра не инициализирована")
+            return
+            
+        self.clear_screen()
         
-    def show_caravans_placeholder(self):
-        """Заглушка для просмотра караванов"""
-        self.show_placeholder("Активные караваны", "Статус отправленных караванов")
+        # Создаем экран статуса караванов
+        caravans_screen = CaravansStatusScreen(
+            parent=self.root,
+            game=self.game,
+            on_back=self.show_main_menu
+        )
+        caravans_screen.pack(fill="both", expand=True)
+        self.current_frame = caravans_screen
     
     def send_caravan_screen(self):
         """Экран отправки каравана"""
