@@ -78,6 +78,7 @@ def process_completed_caravan(
             for name, qty in caravan.goods.items()
         }
 
+
     # === Продажа товаров и расчёт прибыли ===
     profit, sale_breakdown = calculate_sale_profit(
         caravan=caravan,

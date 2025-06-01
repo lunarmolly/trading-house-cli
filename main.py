@@ -62,6 +62,7 @@ def main():
             if "illness_resistance_multiplier" in settings:
                 illness_resistance *= settings["illness_resistance_multiplier"]
 
+
         couriers.append(Courier(
             name=courier_data["name"],
             endurance=courier_data.get("endurance", 0),

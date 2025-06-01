@@ -66,6 +66,7 @@ def choose_city_event(config: dict, difficulty: str = "normal") -> str:
     return choose_event(config['city_events'], difficulty)
 
 
+
 def choose_travel_event(config: dict, difficulty: str = "normal") -> str:
     """
     Выбирает событие в пути с учетом уровня сложности.
