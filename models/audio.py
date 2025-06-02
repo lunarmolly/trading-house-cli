@@ -20,6 +20,7 @@ except ImportError:
 
 class AudioManager:
     """Менеджер для управления фоновой музыкой"""
+    
     def __init__(self, music_folder: str = "data/music", volume: float = 0.5):
         self.music_folder = music_folder
         self.volume = volume
@@ -27,7 +28,7 @@ class AudioManager:
         self.current_track_index = 0
         self.is_playing = False
         self.is_enabled = PYGAME_AVAILABLE
-        self.shuffle_mode = True
+        self.shuffle_mode = True  # Всегда включено
         self._music_thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
         
@@ -156,13 +157,7 @@ class AudioManager:
     def get_volume(self) -> float:
         """Получение текущей громкости"""
         return self.volume
-    
-    def toggle_shuffle(self) -> None:
-        """Переключение режима перемешивания"""
-        self.shuffle_mode = not self.shuffle_mode
-        if self.shuffle_mode and self.playlist:
-            self._shuffle_playlist()
-        print(f"🔀 Перемешивание: {'включено' if self.shuffle_mode else 'выключено'}")
+  
     
     def get_current_track(self) -> Optional[str]:
         """Получение имени текущего трека"""

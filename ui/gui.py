@@ -682,8 +682,7 @@ Ave Caesar! Fortuna audaces iuvat!
             fg_color=RomanTheme.BACKGROUND
         )
         controls_frame.pack(side="left", padx=10, pady=5)
-        
-        # Кнопка воспроизведения/паузы
+          # Кнопка воспроизведения/паузы
         self.play_button = ctk.CTkButton(
             controls_frame,
             text="🎵" if not audio_manager.is_playing else "⏸️",
@@ -695,19 +694,6 @@ Ave Caesar! Fortuna audaces iuvat!
             command=self.toggle_music
         )
         self.play_button.pack(side="left", padx=2)
-        
-        # Кнопка перемешивания
-        shuffle_button = ctk.CTkButton(
-            controls_frame,
-            text="🔀",
-            font=("Arial", 14),
-            width=40,
-            height=30,
-            fg_color=RomanTheme.ACCENT if audio_manager.shuffle_mode else RomanTheme.NEUTRAL,
-            hover_color=RomanTheme.BUTTON_HOVER,
-            command=self.toggle_shuffle
-        )
-        shuffle_button.pack(side="left", padx=2)
         
         # Центральная часть - информация о треке
         info_frame = ctk.CTkFrame(
@@ -765,12 +751,7 @@ Ave Caesar! Fortuna audaces iuvat!
         else:
             audio_manager.start_music()
             self.play_button.configure(text="⏸️")
-    
-    def toggle_shuffle(self):
-        """Переключение режима перемешивания"""
-        audio_manager.toggle_shuffle()
-        # Обновляем все кнопки shuffle на экране
-        self.update_shuffle_buttons()
+  
     
     def change_volume(self, value):
         """Изменение громкости"""
@@ -800,8 +781,4 @@ Ave Caesar! Fortuna audaces iuvat!
         except Exception as e:
             # Игнорируем ошибки обновления UI если виджеты уже уничтожены
             pass
-    
-    def update_shuffle_buttons(self):
-        """Обновление всех кнопок shuffle на экране"""
-        # Эта функция будет обновлять цвет кнопок shuffle при изменении режима
-        pass
+  
