@@ -224,7 +224,7 @@ class CaravansStatusScreen(ctk.CTkFrame):
         cycles_frame = ctk.CTkFrame(card_frame, fg_color=RomanTheme.BACKGROUND)
         cycles_frame.pack(fill="x", pady=5, padx=10)
         
-        cycles_text = f"Отправка: {caravan.departure_cycle} ⟶ Прибытие: {caravan.arrival_cycle} ⟶ Возврат: {caravan.return_cycle}"
+        cycles_text = f"Отправка: {caravan.departure_cycle} ⟶ Возврат: {caravan.return_cycle}"
         cycles_label = ctk.CTkLabel(
             cycles_frame,
             text=cycles_text,
@@ -394,7 +394,7 @@ class CaravansStatusScreen(ctk.CTkFrame):
 
         # Рассчитываем прибыль от продажи товаров с учетом расстояния
         # и спроса в городе назначения
-        city_mod = 1.0 + (caravan.destination.distance * 0.02)
+        city_mod = 1.0 + (caravan.destination.duration * 0.02)
         profit = int(total_purchase_cost * city_mod * event_mod)
         
         # Базовые расходы на путешествие

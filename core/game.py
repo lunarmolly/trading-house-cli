@@ -11,9 +11,8 @@ from core.events import choose_city_event
 class Game:
     """
     Класс для управления основным игровым процессом.
-    """
-
-    def __init__(self, player: Player, cities: List[City], goods: List[GoodsItem], config: dict):
+    """    
+    def __init__(self, player: Player, cities: List[City], goods: List[GoodsItem], config: dict, difficulty: str = "normal"):
         """
         Инициализация игры.
         """
@@ -21,6 +20,7 @@ class Game:
         self.cities = cities
         self.goods = goods
         self.config = config
+        self.difficulty = difficulty
         self.current_cycle = 1
         self.max_cycles = config["player"]["cycles_to_win"]
         self.victory_goal = config["player"]["victory_goal"]
@@ -32,13 +32,13 @@ class Game:
         """
         self.current_cycle += 1
         self.update_city_events()
-
+    
     def update_city_events(self) -> None:
         """
         Обновляет события для всех городов.
         """
         for city in self.cities:
-            city.current_event = choose_city_event(self.config, "normal")
+            city.current_event = choose_city_event(self.config, self.difficulty)
 
     def is_game_over(self) -> bool:
         """
@@ -60,19 +60,17 @@ class Game:
             city: City
     ) -> Caravan:
         """
-        Создаёт караван, рассчитывает циклы прибытия и возврата.
+        Создаёт караван, рассчитывает цикл возврата.
         """
         departure_cycle = self.current_cycle
 
-        # Определяем travel_time для всех случаев
+        # Определяем время возврата
         if city.duration == 0:  # Рим
             travel_time = 0
-            arrival_cycle = departure_cycle
-            return_cycle = departure_cycle
+            return_cycle = departure_cycle  # Возвращается сразу
         else:
             travel_time = city.duration
-            arrival_cycle = departure_cycle + travel_time
-            return_cycle = arrival_cycle + 1 + travel_time
+            return_cycle = departure_cycle + travel_time  # Возвращается через travel_time циклов
 
         caravan = Caravan(
             courier=courier,
@@ -81,7 +79,7 @@ class Game:
             destination=city,
             days_to_travel=travel_time,
             departure_cycle=departure_cycle,
-            arrival_cycle=arrival_cycle,
+            arrival_cycle=return_cycle,  # Для обратной совместимости делаем равным return_cycle
             return_cycle=return_cycle
         )
 
@@ -100,7 +98,7 @@ class Game:
             if caravan.resolved:
                 continue
 
-            update_caravan_event_once(caravan, self.current_cycle, self.config, "normal")
+            update_caravan_event_once(caravan, self.current_cycle, self.config, self.difficulty)
 
             report, done = process_completed_caravan(
                 caravan=caravan,

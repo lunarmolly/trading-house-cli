@@ -78,7 +78,7 @@ def create_player(config: dict, difficulty: str) -> Player:
 def main():
     """Главная функция с выбором интерфейса"""
     # Проверяем аргументы командной строки
-    interface = "cli"  # По умолчанию GUI
+    interface = "gui"  # По умолчанию GUI
     
     if len(sys.argv) > 1:
         if sys.argv[1].lower() in ["cli", "console", "terminal"]:
@@ -124,10 +124,8 @@ def run_cli_game():
     goods = load_goods(config)
 
     # Создание игрока
-    player = create_player(config, difficulty)
-
-    # Инициализация игры - исправлено количество аргументов
-    game = Game(player=player, cities=cities, goods=goods, config=config)
+    player = create_player(config, difficulty)    # Инициализация игры - исправлено количество аргументов
+    game = Game(player=player, cities=cities, goods=goods, config=config, difficulty=difficulty)
 
     # Запуск CLI интерфейса
     show_main_menu(game)

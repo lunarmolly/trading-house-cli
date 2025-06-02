@@ -221,9 +221,7 @@ Ave Caesar! Fortuna audaces iuvat!
             goods = load_goods(config)
             
             # Создание игрока
-            player = self.create_player(config, difficulty)
-            
-            # Инициализация игры
+            player = self.create_player(config, difficulty)            # Инициализация игры
             self.game = Game(
                 player=player,
                 cities=cities,

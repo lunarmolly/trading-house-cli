@@ -187,11 +187,10 @@ class CitiesOverviewScreen(ctk.CTkFrame):
             anchor="w"
         )
         city_name_label.grid(row=0, column=0, padx=10, pady=8, sticky="ew")
-        
-        # Расстояние
+          # Расстояние
         distance_label = ctk.CTkLabel(
             city_row_frame,
-            text=f"{city.distance} дней",
+            text=f"{city.duration} дней",
             font=RomanTheme.FONT_TEXT,
             text_color=RomanTheme.TEXT
         )

@@ -272,10 +272,9 @@ class SendCaravanScreen(ctk.CTkFrame):
             anchor="w"
         )
         city_name_label.pack(anchor="w")
-        
         distance_label = ctk.CTkLabel(
             city_info_frame,
-            text=f"📏 Расстояние: {city.distance} дней",
+            text=f"📏 Расстояние: {city.duration} дней",
             font=RomanTheme.FONT_SMALL,
             text_color=RomanTheme.NEUTRAL,
             anchor="w"
@@ -560,7 +559,7 @@ class SendCaravanScreen(ctk.CTkFrame):
         event = city.current_event or "Нет события"
         event_mod = self.game.config["event_modifiers"].get(event, {}).get(good.name, 1.0) - 1.0
           # Модификатор расстояния
-        distance_mod = city.distance * 0.02
+        distance_mod = city.duration * 0.02
         
         # Итоговый модификатор
         total_percent = city_mod + event_mod + distance_mod
@@ -1045,10 +1044,9 @@ if __name__ == "__main__":
                 wagon=wagon,
                 goods=goods_selection,
                 destination=city,
-                days_to_travel=city.distance,
-                departure_cycle=self.current_cycle,
-                arrival_cycle=self.current_cycle + city.distance,
-                return_cycle=self.current_cycle + city.distance * 2 + 1
+                days_to_travel=city.duration,
+                departure_cycle=self.current_cycle,                arrival_cycle=self.current_cycle + city.duration,
+                return_cycle=self.current_cycle + city.duration * 2 + 1
             )
             self.active_caravans.append(caravan)
             return caravan
