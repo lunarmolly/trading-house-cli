@@ -23,11 +23,24 @@ def generate_world(config: dict, city_count: int = 7) -> List[City]:
     cities = []
     used_names = set()
 
-    for _ in range(city_count):
-        # Имя и расстояние
+    # Добавляем Рим первым городом
+    rome_duration = 0
+    rome_demand_modifiers = {good: 1.0 for good in goods_names}
+    rome = City(
+        name="Рим",
+        duration=rome_duration,
+        demand_modifiers=rome_demand_modifiers,
+        current_event=None
+    )
+    cities.append(rome)
+    used_names.add("Рим")
+
+    # Генерируем остальные города
+    for _ in range(city_count - 1):
+        # Имя и длительность экспедиции
         name = generate_city_name(list(used_names))
         used_names.add(name)
-        distance = random.randint(3, 12)
+        duration = random.choice([2, 4, 6])  # Длительность от 1 до 3 дней
 
         # Спрос: 2 повышенных, 2 пониженных
         demand_modifiers = {good: 1.0 for good in goods_names}
@@ -42,7 +55,7 @@ def generate_world(config: dict, city_count: int = 7) -> List[City]:
         # Создание города
         city = City(
             name=name,
-            distance=distance,
+            duration=duration,
             demand_modifiers=demand_modifiers,
             current_event=None
         )
@@ -57,8 +70,6 @@ def load_balance_config(
 ) -> dict:
     with open(path, encoding="utf-8") as f:
         config = json.load(f)
-
-
 
     # Применяем настройки сложности, если они есть
     if "difficulty_settings" in config and "player" in config:

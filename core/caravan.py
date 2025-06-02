@@ -5,35 +5,23 @@ from models.player import Player
 from models.goods_item import GoodsItem
 from core.events import choose_travel_event
 from core.finance import calculate_trip_expenses, calculate_sale_profit, generate_report
-
 def update_caravan_event_once(
     caravan: Caravan,
     current_cycle: int,
     config: dict,
-    difficulty: str  # Добавлен параметр сложности
+    difficulty: str
 ) -> Optional[str]:
-    """
-    Генерирует единственное событие для каравана с учётом сложности.
-
-    Args:
-        caravan (Caravan): Караван в пути.
-        current_cycle (int): Текущий цикл.
-        config (dict): Конфигурация.
-        difficulty (str): Уровень сложности ("easy"/"normal"/"hard")
-
-    Returns:
-        Optional[str]: Название события, если произошло в этом цикле.
-    """
-    if caravan.event_occurred:
-        return None
+    """Генерирует событие для каравана."""
+    if caravan.event_occurred or caravan.is_rome_expedition():
+        return None  # Пропускаем для Рима
 
     if caravan.departure_cycle <= current_cycle <= caravan.return_cycle:
-        # Используем функцию с учётом сложности
         event = choose_travel_event(config, difficulty)
         if event != "Ничего не произошло":
             caravan.event_occurred = event
             return event
     return None
+
 
 
 def process_completed_caravan(
@@ -43,13 +31,17 @@ def process_completed_caravan(
     goods_dict: Dict[str, GoodsItem],
     config: dict
 ) -> Tuple[Dict, bool]:
-    """
-    Обрабатывает караван, завершивший миссию (достиг return_cycle).
-    """
+    """Обрабатывает завершённый караван."""
     if current_cycle < caravan.return_cycle:
         return {}, False
 
-    event = caravan.event_occurred or "Ничего не произошло"
+    # Специальная обработка для Рима
+    if caravan.is_rome_expedition():
+        total_days = 0
+        event = "Продажа в Риме"
+    else:
+        total_days = caravan.days_to_travel
+        event = caravan.event_occurred or "Ничего не произошло"
     loss_ratio = 0.0
     extra_cost = 0
 

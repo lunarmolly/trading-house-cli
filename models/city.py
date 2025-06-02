@@ -8,14 +8,14 @@ class City:
 
     Атрибуты:
         name (str): Название города.
-        distance (int): Расстояние от столицы (в днях пути).
+        duration (int): Длительность экспедиции туда и обратно (в днях).
         demand_modifiers (Dict[str, float]): Модификаторы спроса на товары.
         current_event (Optional[str]): Текущее событие в городе (устанавливается каждый игровой год).
     """
     name: str
-    distance: int
+    duration: int
     demand_modifiers: Dict[str, float]
-    current_event: Optional[str] = None  # Ивент будет назначаться в каждом году
+    current_event: Optional[str] = None
 
     def get_price_modifier(self, goods_name: str) -> float:
         """

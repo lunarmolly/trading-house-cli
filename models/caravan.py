@@ -4,6 +4,7 @@ from models.courier import Courier
 from models.wagon import Wagon
 from models.city import City
 
+
 @dataclass
 class Caravan:
     """
@@ -36,7 +37,7 @@ class Caravan:
     def goods_carried(self) -> Dict[str, int]:
         """
         Свойство для обратной совместимости с GUI.
-        
+
         Returns:
             Dict[str, int]: Товары в караване.
         """
@@ -59,3 +60,7 @@ class Caravan:
             bool: True, если перегрузка.
         """
         return self.total_goods() > self.wagon.capacity
+
+    def is_rome_expedition(self) -> bool:
+        """Проверяет, является ли экспедиция поездкой в Рим."""
+        return self.destination.name == "Рим"
