@@ -195,10 +195,8 @@ class CitiesOverviewScreen(ctk.CTkFrame):
             text_color=RomanTheme.TEXT
         )
         distance_label.grid(row=0, column=1, padx=10, pady=8, sticky="ew")
-        
-        # Текущее событие
-        event_text = city.current_event or "Нет события"
-        event_color = RomanTheme.WARNING if city.current_event else RomanTheme.NEUTRAL
+          # Текущее событие
+        event_text, event_color = self.get_event_display_info(city)
         event_label = ctk.CTkLabel(
             city_row_frame,
             text=f"🎭 {event_text}",
@@ -206,15 +204,14 @@ class CitiesOverviewScreen(ctk.CTkFrame):
             text_color=event_color
         )
         event_label.grid(row=0, column=2, padx=10, pady=8, sticky="ew")
-        
-        # Спрос на товары (показываем товары с высоким спросом)
+          # Спрос на товары (показываем товары с измененным спросом)
         high_demand_goods = self.get_high_demand_goods(city)
         demand_text = ", ".join(high_demand_goods) if high_demand_goods else "Обычный спрос"
         demand_label = ctk.CTkLabel(
             city_row_frame,
             text=demand_text,
             font=RomanTheme.FONT_SMALL,
-            text_color=RomanTheme.SUCCESS if high_demand_goods else RomanTheme.NEUTRAL,
+            text_color=RomanTheme.TEXT,  # Нейтральный цвет, так как цветовая информация передается через эмодзи
             wraplength=200
         )
         demand_label.grid(row=0, column=3, padx=10, pady=8, sticky="ew")
@@ -229,24 +226,64 @@ class CitiesOverviewScreen(ctk.CTkFrame):
             text_color=caravan_color
         )
         caravan_label.grid(row=0, column=4, padx=10, pady=8, sticky="ew")
-    
+    def get_event_display_info(self, city: City) -> tuple[str, str]:
+        """Получить информацию для отображения события"""
+        if not city.current_event:
+            return "Нет события", RomanTheme.ERROR  # Красный - нет события
+        else:
+            return city.current_event, RomanTheme.SUCCESS  # Зеленый - есть событие
+
+    def analyze_event_impact(self, city: City) -> str:
+        """Анализ влияния события на прибыльность товаров"""
+        if not city.current_event:
+            return "neutral"
+        
+        # Получаем модификаторы события из конфигурации
+        event_modifiers = self.game.config.get("event_modifiers", {}).get(city.current_event, {})
+        
+        if not event_modifiers:
+            return "neutral"
+        
+        # Анализируем модификаторы
+        positive_count = 0
+        negative_count = 0
+        
+        for good_name, modifier in event_modifiers.items():
+            if modifier > 1.0:
+                positive_count += 1
+            elif modifier < 1.0:
+                negative_count += 1        # Определяем общее влияние
+        if positive_count > negative_count:
+            return "positive"
+        elif negative_count > positive_count:
+            return "negative"
+        else:
+            return "neutral"
+
     def get_high_demand_goods(self, city: City) -> list[str]:
-        """Получить список товаров с высоким спросом в городе"""
-        high_demand = []
+        """Получить список товаров с измененным спросом в городе"""
+        demand_changes = []
         
         # Проверяем модификаторы спроса города
         for good_name, modifier in city.demand_modifiers.items():
-            if modifier > 1.2:  # Если спрос больше 120%
-                high_demand.append(good_name)
+            if modifier > 1.1:  # Если спрос больше 110% - зеленый
+                demand_changes.append(f"⬆{good_name}")
+            elif modifier < 0.9:  # Если спрос меньше 90% - красный
+                demand_changes.append(f"⬇{good_name}")
         
         # Также проверяем влияние текущего события
         if city.current_event and city.current_event in self.game.config.get("event_modifiers", {}):
             event_modifiers = self.game.config["event_modifiers"][city.current_event]
             for good_name, modifier in event_modifiers.items():
-                if modifier > 1.3 and good_name not in high_demand:  # Если событие дает большой бонус
-                    high_demand.append(f"{good_name}*")  # Помечаем звездочкой товары под влиянием события
+                # Проверяем, не добавляли ли мы уже этот товар из базовых модификаторов города
+                already_added = any(good_name in item for item in demand_changes)
+                if not already_added:
+                    if modifier > 1.0:  # Если событие повышает цену - зеленый
+                        demand_changes.append(f"⬆{good_name}")
+                    elif modifier < 1.0:  # Если событие понижает цену - красный
+                        demand_changes.append(f"⬇{good_name}")
         
-        return high_demand[:3]  # Возвращаем максимум 3 товара для компактности
+        return demand_changes[:5]  # Возвращаем максимум 5 товаров для компактности
     
     def get_caravan_status_for_city(self, city: City) -> str:
         """Получить статус караванов для города"""
