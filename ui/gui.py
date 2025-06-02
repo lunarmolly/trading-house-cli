@@ -17,6 +17,7 @@ from models.player import Player
 from models.courier import Courier
 from models.wagon import Wagon
 from core.game import Game
+from models.audio import AudioManager
 
 # Импорты экранов из подпапки screens
 from ui.screens.difficulty_screen import DifficultyScreen, RomanTheme
@@ -52,6 +53,16 @@ class TradingHouseGUI:
         
         # Создание стартового экрана
         self.create_start_screen()
+
+        # Инициализация звука
+        self.audio_manager = AudioManager()
+        self.audio_manager.play_background_music("second_music")
+
+    def exit_game(self):
+        """Выход из игры с остановкой музыки"""
+        self.audio_manager.stop_music()
+        self.root.quit()
+        self.root.destroy()
     
     def center_window(self):
         """Центрирование окна на экране"""
