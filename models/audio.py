@@ -12,6 +12,7 @@ try:
     import pygame
     PYGAME_AVAILABLE = True
 except ImportError:
+    pygame = None
     PYGAME_AVAILABLE = False
     print("Предупреждение: pygame не установлен. Музыка будет отключена.")
     print("Для включения музыки установите: pip install pygame")
@@ -19,7 +20,6 @@ except ImportError:
 
 class AudioManager:
     """Менеджер для управления фоновой музыкой"""
-    
     def __init__(self, music_folder: str = "data/music", volume: float = 0.5):
         self.music_folder = music_folder
         self.volume = volume
@@ -33,11 +33,15 @@ class AudioManager:
         
         if self.is_enabled:
             try:
-                pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
+                # Инициализация с более безопасными параметрами
+                pygame.mixer.pre_init(frequency=22050, size=-16, channels=2, buffer=1024)
+                pygame.mixer.init()
                 pygame.mixer.music.set_volume(self.volume)
                 self._load_playlist()
+                print("🎵 Аудио система инициализирована успешно")
             except Exception as e:
-                print(f"Ошибка инициализации аудио: {e}")
+                print(f"Предупреждение: Не удалось инициализировать аудио: {e}")
+                print("🎵 Музыка будет отключена")
                 self.is_enabled = False
     
     def _load_playlist(self) -> None:
@@ -80,7 +84,6 @@ class AudioManager:
         self._music_thread = threading.Thread(target=self._music_loop, daemon=True)
         self._music_thread.start()
         print("🎵 Фоновая музыка запущена")
-    
     def stop_music(self) -> None:
         """Остановка фоновой музыки"""
         if not self.is_enabled:
@@ -90,29 +93,32 @@ class AudioManager:
         self._stop_event.set()
         
         try:
-            pygame.mixer.music.stop()
-        except:
-            pass
+            if pygame and PYGAME_AVAILABLE:
+                pygame.mixer.music.stop()
+        except Exception as e:
+            print(f"Ошибка при остановке музыки: {e}")
         
         if self._music_thread and self._music_thread.is_alive():
             self._music_thread.join(timeout=1.0)
         
         print("🎵 Фоновая музыка остановлена")
-    
     def _music_loop(self) -> None:
         """Основной цикл воспроизведения музыки"""
         while self.is_playing and not self._stop_event.is_set():
             try:
-                if self.playlist:
+                if self.playlist and self.is_enabled:
                     current_track = self.playlist[self.current_track_index]
                     print(f"🎵 Играет: {os.path.basename(current_track)}")
                     
-                    pygame.mixer.music.load(current_track)
-                    pygame.mixer.music.play()
-                    
-                    # Ждем окончания трека
-                    while pygame.mixer.music.get_busy() and self.is_playing and not self._stop_event.is_set():
-                        time.sleep(0.5)
+                    if PYGAME_AVAILABLE:
+                        pygame.mixer.music.load(current_track)
+                        pygame.mixer.music.play()
+                        
+                        # Ждем окончания трека
+                        while (pygame.mixer.music.get_busy() and 
+                               self.is_playing and 
+                               not self._stop_event.is_set()):
+                            time.sleep(0.5)
                     
                     # Переход к следующему треку
                     self._next_track()
@@ -121,7 +127,9 @@ class AudioManager:
                     
             except Exception as e:
                 print(f"Ошибка воспроизведения музыки: {e}")
-                time.sleep(1)
+                # При ошибке ждем перед попыткой следующего трека
+                time.sleep(2)
+                self._next_track()
     
     def _next_track(self) -> None:
         """Переход к следующему треку"""
@@ -136,12 +144,14 @@ class AudioManager:
             if self.shuffle_mode:
                 self._shuffle_playlist()
                 print("🔀 Плейлист перемешан")
-    
     def set_volume(self, volume: float) -> None:
         """Установка громкости (0.0 - 1.0)"""
         self.volume = max(0.0, min(1.0, volume))
-        if self.is_enabled:
-            pygame.mixer.music.set_volume(self.volume)
+        if self.is_enabled and pygame and PYGAME_AVAILABLE:
+            try:
+                pygame.mixer.music.set_volume(self.volume)
+            except Exception as e:
+                print(f"Ошибка установки громкости: {e}")
     
     def get_volume(self) -> float:
         """Получение текущей громкости"""

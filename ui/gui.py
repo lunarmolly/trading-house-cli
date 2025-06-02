@@ -642,9 +642,10 @@ Ave Caesar! Fortuna audaces iuvat!
             command=self.create_start_screen
         )
         back_button.pack(pady=20)
-    
     def exit_game(self):
         """Выход из игры"""
+        # Останавливаем музыку при выходе
+        audio_manager.stop_music()
         self.root.quit()
         self.root.destroy()
     
@@ -787,14 +788,18 @@ Ave Caesar! Fortuna audaces iuvat!
         current_track = info["current_track"] or "Нет трека"
         status = "Играет" if info["is_playing"] else "Остановлено"
         return f"🎵 {status}: {current_track} ({info['current_index']}/{info['total_tracks']})"
-    
     def update_audio_info(self):
         """Обновление информации о треке"""
-        if hasattr(self, 'track_label'):
-            self.track_label.configure(text=self.get_track_info())
-        
-        # Планируем следующее обновление через 3 секунды
-        self.root.after(3000, self.update_audio_info)
+        try:
+            if hasattr(self, 'track_label') and self.track_label.winfo_exists():
+                self.track_label.configure(text=self.get_track_info())
+            
+            # Планируем следующее обновление через 3 секунды только если окно еще существует
+            if self.root and self.root.winfo_exists():
+                self.root.after(3000, self.update_audio_info)
+        except Exception as e:
+            # Игнорируем ошибки обновления UI если виджеты уже уничтожены
+            pass
     
     def update_shuffle_buttons(self):
         """Обновление всех кнопок shuffle на экране"""
