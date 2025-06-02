@@ -4,6 +4,7 @@
 
 import os
 import random
+import sys
 import threading
 import time
 from typing import List, Optional
@@ -18,11 +19,24 @@ except ImportError:
     print("Для включения музыки установите: pip install pygame")
 
 
+def get_resource_path(relative_path: str) -> str:
+    """Получить абсолютный путь к ресурсу для PyInstaller"""
+    try:
+        # PyInstaller создает временную папку и сохраняет путь в _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # Если запуск не из PyInstaller билда, используем текущую директорию
+        base_path = os.path.abspath(".")
+    
+    return os.path.join(base_path, relative_path)
+
+
 class AudioManager:
     """Менеджер для управления фоновой музыкой"""
     
     def __init__(self, music_folder: str = "data/music", volume: float = 0.5):
-        self.music_folder = music_folder
+        # Получаем правильный путь к музыкальной папке
+        self.music_folder = get_resource_path(music_folder)
         self.volume = volume
         self.playlist: List[str] = []
         self.current_track_index = 0

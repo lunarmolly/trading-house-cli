@@ -45,13 +45,17 @@ def clean_build_dirs():
 
 def get_pyinstaller_args(onefile=False, debug=False):
     """Подготовка аргументов для PyInstaller"""
+    # Определяем разделитель для --add-data в зависимости от ОС
+    separator = ';' if os.name == 'nt' else ':'
+    
     args = [
         'pyinstaller',
         '--name=TradingHouse',
-        '--add-data=data;data',  # Включаем папку data
-        '--add-data=ui;ui',      # Включаем папку ui (для GUI)
+        f'--add-data=data{separator}data',  # Включаем папку data с музыкой
+        f'--add-data=ui{separator}ui',      # Включаем папку ui (для GUI)
         '--hidden-import=customtkinter',
         '--hidden-import=tkinter',
+        '--hidden-import=pygame',           # Добавляем pygame для музыки
         '--clean',
         '--noconfirm'
     ]
