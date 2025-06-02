@@ -14,6 +14,7 @@ from core.goods import load_goods
 from models.player import Player
 from models.courier import Courier
 from models.wagon import Wagon
+from models.audio import audio_manager
 from core.game import Game  # Исправлен импорт
 from ui.cli import show_main_menu, select_difficulty
 
@@ -77,6 +78,9 @@ def create_player(config: dict, difficulty: str) -> Player:
 
 def main():
     """Главная функция с выбором интерфейса"""
+    # Запуск фоновой музыки
+    audio_manager.start_music()
+    
     # Проверяем аргументы командной строки
     interface = "gui"  # По умолчанию GUI
     

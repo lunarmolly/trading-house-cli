@@ -16,6 +16,7 @@ from core.goods import load_goods
 from models.player import Player
 from models.courier import Courier
 from models.wagon import Wagon
+from models.audio import audio_manager
 from core.game import Game
 
 # Импорты экранов из подпапки screens
@@ -182,12 +183,15 @@ Ave Caesar! Fortuna audaces iuvat!
             fg_color=RomanTheme.NEUTRAL,
             hover_color="#999999",
             text_color=RomanTheme.TEXT,
-            corner_radius=8,
+                        corner_radius=8,
             width=120,
             height=40,
             command=self.exit_game
         )
         exit_button.pack(side="left", padx=10)
+        
+        # Панель управления аудио
+        self.create_audio_controls(main_frame)
         
         # Информация о версии
         version_label = ctk.CTkLabel(
@@ -197,6 +201,7 @@ Ave Caesar! Fortuna audaces iuvat!
             text_color=RomanTheme.NEUTRAL
         )
         version_label.pack(side="bottom", pady=20)
+
     def show_difficulty_selection(self):
         """Экран выбора сложности"""
         self.clear_screen()
@@ -656,8 +661,142 @@ Ave Caesar! Fortuna audaces iuvat!
                 self.root.destroy()
             except:
                 pass
-
-
-if __name__ == "__main__":
-    app = TradingHouseGUI()
-    app.run()
+    
+    def create_audio_controls(self, parent):
+        """Создание панели управления аудио"""
+        audio_frame = ctk.CTkFrame(
+            parent,
+            fg_color=RomanTheme.BACKGROUND,
+            border_color=RomanTheme.FRAME_BORDER,
+            border_width=1,
+            corner_radius=8,
+            height=60
+        )
+        audio_frame.pack(side="bottom", fill="x", padx=10, pady=5)
+        audio_frame.pack_propagate(False)
+        
+        # Левая часть - кнопки управления
+        controls_frame = ctk.CTkFrame(
+            audio_frame,
+            fg_color=RomanTheme.BACKGROUND
+        )
+        controls_frame.pack(side="left", padx=10, pady=5)
+        
+        # Кнопка воспроизведения/паузы
+        self.play_button = ctk.CTkButton(
+            controls_frame,
+            text="🎵" if not audio_manager.is_playing else "⏸️",
+            font=("Arial", 16),
+            width=40,
+            height=30,
+            fg_color=RomanTheme.BUTTON,
+            hover_color=RomanTheme.BUTTON_HOVER,
+            command=self.toggle_music
+        )
+        self.play_button.pack(side="left", padx=2)
+        
+        # Кнопка перемешивания
+        shuffle_button = ctk.CTkButton(
+            controls_frame,
+            text="🔀",
+            font=("Arial", 14),
+            width=40,
+            height=30,
+            fg_color=RomanTheme.ACCENT if audio_manager.shuffle_mode else RomanTheme.NEUTRAL,
+            hover_color=RomanTheme.BUTTON_HOVER,
+            command=self.toggle_shuffle
+        )
+        shuffle_button.pack(side="left", padx=2)
+        
+        # Центральная часть - информация о треке
+        info_frame = ctk.CTkFrame(
+            audio_frame,
+            fg_color=RomanTheme.BACKGROUND
+        )
+        info_frame.pack(side="left", expand=True, fill="x", padx=10, pady=5)
+        
+        self.track_label = ctk.CTkLabel(
+            info_frame,
+            text=self.get_track_info(),
+            font=("Arial", 12),
+            text_color=RomanTheme.TEXT
+        )
+        self.track_label.pack(expand=True)
+        
+        # Правая часть - регулятор громкости
+        volume_frame = ctk.CTkFrame(
+            audio_frame,
+            fg_color=RomanTheme.BACKGROUND
+        )
+        volume_frame.pack(side="right", padx=10, pady=5)
+        
+        volume_label = ctk.CTkLabel(
+            volume_frame,
+            text="🔊",
+            font=("Arial", 14),
+            text_color=RomanTheme.TEXT
+        )
+        volume_label.pack(side="left", padx=(0, 5))
+        
+        self.volume_slider = ctk.CTkSlider(
+            volume_frame,
+            from_=0,
+            to=1,
+            number_of_steps=20,
+            width=100,
+            height=20,
+            progress_color=RomanTheme.ACCENT,
+            button_color=RomanTheme.BUTTON,
+            button_hover_color=RomanTheme.BUTTON_HOVER,
+            command=self.change_volume
+        )
+        self.volume_slider.set(audio_manager.get_volume())
+        self.volume_slider.pack(side="left", padx=5)
+        
+        # Обновляем информацию о треке каждые несколько секунд
+        self.update_audio_info()
+    
+    def toggle_music(self):
+        """Переключение воспроизведения музыки"""
+        if audio_manager.is_playing:
+            audio_manager.stop_music()
+            self.play_button.configure(text="🎵")
+        else:
+            audio_manager.start_music()
+            self.play_button.configure(text="⏸️")
+    
+    def toggle_shuffle(self):
+        """Переключение режима перемешивания"""
+        audio_manager.toggle_shuffle()
+        # Обновляем все кнопки shuffle на экране
+        self.update_shuffle_buttons()
+    
+    def change_volume(self, value):
+        """Изменение громкости"""
+        audio_manager.set_volume(value)
+    
+    def get_track_info(self):
+        """Получение информации о текущем треке"""
+        if not audio_manager.is_enabled:
+            return "🎵 Аудио отключено (pygame не установлен)"
+        
+        info = audio_manager.get_playlist_info()
+        if info["total_tracks"] == 0:
+            return "🎵 Музыкальные файлы не найдены в папке data/music"
+        
+        current_track = info["current_track"] or "Нет трека"
+        status = "Играет" if info["is_playing"] else "Остановлено"
+        return f"🎵 {status}: {current_track} ({info['current_index']}/{info['total_tracks']})"
+    
+    def update_audio_info(self):
+        """Обновление информации о треке"""
+        if hasattr(self, 'track_label'):
+            self.track_label.configure(text=self.get_track_info())
+        
+        # Планируем следующее обновление через 3 секунды
+        self.root.after(3000, self.update_audio_info)
+    
+    def update_shuffle_buttons(self):
+        """Обновление всех кнопок shuffle на экране"""
+        # Эта функция будет обновлять цвет кнопок shuffle при изменении режима
+        pass
