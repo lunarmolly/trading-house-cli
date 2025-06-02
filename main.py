@@ -14,7 +14,7 @@ from core.goods import load_goods
 from models.player import Player
 from models.courier import Courier
 from models.wagon import Wagon
-from core.game import Game
+from core.game import Game  # Исправлен импорт
 from ui.cli import show_main_menu, select_difficulty
 
 
@@ -78,7 +78,7 @@ def create_player(config: dict, difficulty: str) -> Player:
 def main():
     """Главная функция с выбором интерфейса"""
     # Проверяем аргументы командной строки
-    interface = "gui"  # По умолчанию GUI
+    interface = "cli"  # По умолчанию GUI
     
     if len(sys.argv) > 1:
         if sys.argv[1].lower() in ["cli", "console", "terminal"]:
@@ -126,8 +126,8 @@ def run_cli_game():
     # Создание игрока
     player = create_player(config, difficulty)
 
-    # Инициализация игры
-    game = Game(player=player, cities=cities, goods=goods, config=config, difficulty=difficulty)
+    # Инициализация игры - исправлено количество аргументов
+    game = Game(player=player, cities=cities, goods=goods, config=config)
 
     # Запуск CLI интерфейса
     show_main_menu(game)

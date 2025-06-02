@@ -10,7 +10,7 @@
       "event_probability_multiplier": 1.0,
       "illness_resistance_multiplier": 1.0
     },    "hard": {
-      "starting_balance_multiplier": 0.5,
+      "starting_balance_multiplier": 0.7,
       "event_probability_multiplier": 1.3,
       "illness_resistance_multiplier": 0.8
     }
@@ -38,7 +38,7 @@
   "goods": [
     {
       "name": "Зерно",
-      "base_price": 5,
+      "base_price": 6,
       "category": "Food"
     },
     {
@@ -90,12 +90,12 @@
   "travel_costs": {
     "food_per_day": 1,
     "lodging_per_2_days": 2,
-    "guard_cost_per_trip": 5
+    "guard_cost_per_trip": 10
   },
   "city_events": [
     {
       "name": "Засуха",
-      "probability": 0.10
+      "probability": 0.07
     },
     {
       "name": "Война",
@@ -111,7 +111,7 @@
     },
     {
       "name": "Бунт",
-      "probability": 0.05
+      "probability": 0.03
     },
     {
       "name": "Урожайный год",
@@ -119,7 +119,7 @@
     },
     {
       "name": "Нет события",
-      "probability": 0.45
+      "probability": 0.50
     }
   ],
   "travel_events": [
@@ -129,7 +129,7 @@
     },
     {
       "name": "Дождь и грязь",
-      "probability": 0.20
+      "probability": 0.10
     },
     {
       "name": "Болезнь курьера",
@@ -145,11 +145,11 @@
     },
     {
       "name": "Смерть курьера",
-      "probability": 0.02
+      "probability": 0.01
     },
     {
       "name": "Ничего не произошло",
-      "probability": 0.38
+      "probability": 0.48
     }
   ],
   "couriers": [
@@ -176,9 +176,9 @@
       "durability": 0.75
     },
     {
-      "name": "Усиленная повозка",
-      "capacity": 350,
-      "durability": 0.5
+       "name": "Усиленная повозка",
+        "capacity": 350,
+        "durability": 0.5
     }
   ],
   "progression": [
