@@ -271,7 +271,7 @@ def send_caravan(game) -> None:
     if city.duration == 0:
         print(f"Караван отправлен в Рим (вернется в этом цикле)")
     else:
-        print(f"Караван отправлен в {city.name} (вернется через {city.duration+1} циклов)")
+        print(f"Караван отправлен в {city.name} (вернется через {city.duration} циклов)")
     input("\nНажмите Enter для возврата в меню...")
 
 

@@ -40,7 +40,7 @@ def process_completed_caravan(
         total_days = 0
         event = "Продажа в Риме"
     else:
-        total_days = caravan.days_to_travel * 2 + 1
+        total_days = caravan.days_to_travel
         event = caravan.event_occurred or "Ничего не произошло"
     loss_ratio = 0.0
     extra_cost = 0
