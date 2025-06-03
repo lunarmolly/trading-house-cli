@@ -32,7 +32,6 @@ __all__ = ['TradingHouseGUI', 'RomanTheme']
 
 class TradingHouseGUI:
     """Главный класс GUI приложения"""
-    
     def __init__(self):
         # Настройка темы customtkinter
         ctk.set_appearance_mode("light")
@@ -41,7 +40,10 @@ class TradingHouseGUI:
         # Создание главного окна
         self.root = ctk.CTk()
         self.root.title("🏛️ Торговый Дом - Древний Рим")
-        self.root.geometry("1920x1080")
+        
+        # Получаем размер экрана и вычисляем адаптивный размер окна
+        self.setup_window_size()
+        
         self.root.configure(fg_color=RomanTheme.BACKGROUND)
         
         # Центрирование окна
@@ -50,17 +52,57 @@ class TradingHouseGUI:
         # Игровые объекты
         self.game: Optional[Game] = None
         self.current_frame: Optional[ctk.CTkFrame] = None
-        
-        # Создание стартового экрана
+          # Создание стартового экрана
         self.create_start_screen()
     
+    def setup_window_size(self):
+        """Настройка адаптивного размера окна под монитор"""
+        # Получаем размер экрана
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        
+        # Вычисляем размер окна (85% от размера экрана)
+        window_width = int(screen_width * 0.85)
+        window_height = int(screen_height * 0.85)
+        
+        # Минимальные размеры окна для корректного отображения интерфейса
+        min_width = 1200
+        min_height = 800
+        
+        # Применяем минимальные ограничения
+        window_width = max(window_width, min_width)
+        window_height = max(window_height, min_height)
+        
+        # Максимальные размеры (на случай очень больших мониторов)
+        max_width = 1920
+        max_height = 1080
+        
+        # Применяем максимальные ограничения
+        window_width = min(window_width, max_width)
+        window_height = min(window_height, max_height)
+        
+        # Сохраняем размеры для использования в других методах
+        self.window_width = window_width
+        self.window_height = window_height
+        
+        # Устанавливаем размер окна
+        self.root.geometry(f"{window_width}x{window_height}")
+        
+        # Устанавливаем минимальный размер окна
+        self.root.minsize(min_width, min_height)
     def center_window(self):
         """Центрирование окна на экране"""
         self.root.update_idletasks()
-        width = 1920
-        height = 1080
+        
+        # Используем вычисленные размеры окна
+        width = self.window_width
+        height = self.window_height
+        
+        # Вычисляем позицию для центрирования
         x = (self.root.winfo_screenwidth() // 2) - (width // 2)
         y = (self.root.winfo_screenheight() // 2) - (height // 2)
+        
+        # Устанавливаем позицию окна
         self.root.geometry(f"{width}x{height}+{x}+{y}")
     
     def clear_screen(self):
