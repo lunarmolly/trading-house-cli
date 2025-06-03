@@ -6,6 +6,7 @@ GUI интерфейс для игры "Торговый дом" - Древни�
 import customtkinter as ctk
 import sys
 import os
+import json
 from typing import Optional
 
 # Добавляем корневую папку в путь для импортов
@@ -28,6 +29,18 @@ from ui.screens.cities_overview_screen import CitiesOverviewScreen
 from ui.screens.caravans_status_screen import CaravansStatusScreen
 
 __all__ = ['TradingHouseGUI', 'RomanTheme']
+
+
+def get_resource_path(relative_path: str) -> str:
+    """Получить абсолютный путь к ресурсу для PyInstaller"""
+    try:
+        # PyInstaller создает временную папку и сохраняет путь в _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # Обычный запуск Python
+        base_path = os.path.abspath(".")
+    
+    return os.path.join(base_path, relative_path)
 
 
 class TradingHouseGUI:
@@ -150,14 +163,12 @@ class TradingHouseGUI:
             border_width=3,
             corner_radius=15
         )
-        description_frame.pack(pady=30, padx=100, fill="both", expand=True)
-          # Получаем цель из конфигурации (по умолчанию 15000)
-        config_path = "data/balance_config.json"
+        description_frame.pack(pady=30, padx=100, fill="both", expand=True)        # Получаем цель из конфигурации (по умолчанию 15000)
+        config_path = get_resource_path("data/balance_config.json")
         if not os.path.exists(config_path):
-            config_path = "balance_config.json"
+            config_path = get_resource_path("balance_config.json")
             
         try:
-            import json
             with open(config_path, 'r', encoding='utf-8') as f:
                 config_data = json.load(f)
             victory_goal = config_data.get("player", {}).get("victory_goal", 15000)
@@ -282,12 +293,11 @@ Ave Caesar! Fortuna audaces iuvat!
             
         except Exception as e:
             self.show_error(f"Ошибка при запуске игры: {str(e)}")
-    
     def load_game_config(self, difficulty: str) -> dict:
         """Загрузка конфигурации игры"""
-        config_path = "data/balance_config.json"
+        config_path = get_resource_path("data/balance_config.json")
         if not os.path.exists(config_path):
-            config_path = "balance_config.json"
+            config_path = get_resource_path("balance_config.json")
         
         return load_balance_config(path=config_path, difficulty=difficulty)
     

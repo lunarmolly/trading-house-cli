@@ -19,11 +19,23 @@ from core.game import Game  # Исправлен импорт
 from ui.cli import show_main_menu, select_difficulty
 
 
+def get_resource_path(relative_path: str) -> str:
+    """Получить абсолютный путь к ресурсу для PyInstaller"""
+    try:
+        # PyInstaller создает временную папку и сохраняет путь в _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # Обычный запуск Python
+        base_path = os.path.abspath(".")
+    
+    return os.path.join(base_path, relative_path)
+
+
 def load_game_config(difficulty: str) -> dict:
     """Загрузка и проверка конфигурации с учетом сложности"""
-    config_path = "data/balance_config.json"
+    config_path = get_resource_path("data/balance_config.json")
     if not os.path.exists(config_path):
-        config_path = "balance_config.json"
+        config_path = get_resource_path("balance_config.json")
 
     try:
         config = load_balance_config(path=config_path, difficulty=difficulty)
